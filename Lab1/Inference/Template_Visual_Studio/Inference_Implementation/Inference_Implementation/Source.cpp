@@ -27,7 +27,7 @@ int main()
 
 		/*
 		Questions:
-
+		
 		1. Are we feeding the outputs of previous layers into the next layer OR are we just taking the given input for each layer based on the given bin files?
 			a. Are we using the given bin files inside the Test_Input0,1,2 directories? Or are we supposed to be generating all of those bin files from python?
 		2. Why are the intermediate files flattened?
@@ -40,15 +40,15 @@ int main()
 		// Were you able to get similar final classification probability as the python version executing? if not what was the difference.
 }
 
-vector<vector<vector<float>>> conv1_input(char * fileName) {
+vector<vector<vector<float>>> conv_input(char * fileName, int x, int y, int z) {
 	
 	/* Input Data */
-	float conv1_inputs[12288] = { 0 }; // reshape back to 64*64*3
-	vector<vector<vector<float>>> reshaped_inputs(3, vector<vector<float>>(64, vector<float>(64, 0)));
+	float conv1_inputs[x*y*z] = { 0 }; // reshape back to x*y*z
+	vector<vector<vector<float>>> reshaped_inputs(z, vector<vector<float>>(y, vector<float>(x, 0)));
 
 	
 	FILE* ptr_input = fopen(fileName, "rb");  // r for read, b for binary
-	int r2 = fread(conv1_inputs, sizeof(float), 393216, ptr_input);
+	int r2 = fread(conv1_inputs, sizeof(float), x*y*z, ptr_input);
 	printf("Read weight values: %d\n", r2);
 	fclose(ptr_input);
 
@@ -57,9 +57,9 @@ vector<vector<vector<float>>> conv1_input(char * fileName) {
 	int j = 0;
 	int count = 0;
 
-	for (i = 0; i < 3; ++i) {
-		for (f = 0; f < 64; ++f) {
-			for (j = 0; j < 64; ++j) {
+	for (i = 0; i < z; ++i) {
+		for (f = 0; f < y; ++f) {
+			for (j = 0; j < x; ++j) {
 				reshaped_inputs[i][f][j] = conv1_inputs[count];
 				count++;
 			}
@@ -69,13 +69,62 @@ vector<vector<vector<float>>> conv1_input(char * fileName) {
 	return reshaped_inputs;
 }
 
-vector<vector<vector<vector<float>>>> conv1_weights(char * filename) {
+float mult_and_accumulate(vector<<vector<vector<float>>> weights_M, vector<vector<vector<float>>> input_fmap_M_partial) {
+	
+	/* Matrix Multiplication */
+	float sum = 0;
+	int x = 0;
+	int y = 0;
+	int z = 0;
+
+	for (z = 0; z < weights_C.size(); z++) {
+		for (y = 0; y < weights_C[0].size(); y++) {
+			for (x = 0; x < weights_C[0][0].size(); x++) {
+				sum += weights_C[z][y][x] * input_fmap_C_partial[][][];
+			}
+		}
+	}
+	return sum;
+}
+
+vector<vector<vector<vector<float>>>> ofmap_gen(vector<vector<vector<float>>> input_fmap, vector<vector<vector<vector<float>>>> weights) {
+	int x = 0;
+	int y = 0;
+	int z = 0;
+	int filter_num = 0;
+	int l = 0;
+	int m = 0;
+
+	for (i = 0; i < weights[0][0].size(); i++) {
+
+		for (j = 0; j < input_fmap.size() - weights.size(); j++) {
+			for (k = 0; k < input_fmap.size() - weights.size(); k++) {
+				< vector<vector<float>> cross_section (input_fmap.size(), vector<float>(input_fmap[0].size(), 0));
+				< vector<vector<float>> fmap_cross (weights.size(), vector<float>(weights[0].size(), 0));
+				for (l=0; l<weights.size(); ++l) {
+					for(m=0; m<weights[0].size; ++m) {
+						cross_section[l][m] = weights[l][m][i][0];
+					}
+				}
+				for (l = j; l < j + weights.size(); ++l) {
+					for (m = k; m < k + weights.size(); ++m) {
+						fmap_cross[l][m] = input_fmap[l][m][i];
+					}
+				}
+				mult_and_accumulate(cross_section, fmap_cross);
+			}
+		}
+	}
+}
+
+
+vector<vector<vector<vector<float>>>> conv_weights(char * filename, int x, int y, int z, int w) {
 	/* Weights Data */
-	float conv1_weights[393216] = { 0 }; // reshape back to 64*64*3*32
-	vector<vector<vector<vector<float>>>> reshaped_weights(3, vector<vector<vector<float>>>(64, vector<vector<float>>(64, vector<float>(32, 0))));
+	float conv1_weights[x*y*z*w] = { 0 }; // reshape back to x*y*z*w
+	vector<vector<vector<vector<float>>>> reshaped_weights(z, vector<vector<vector<float>>>(y, vector<vector<float>>(x, vector<float>(w, 0))));
 
 	FILE* ptr_weights = fopen(filename, "rb");  // r for read, b for binary
-	int r2 = fread(conv1_weights, sizeof(float), 393216, ptr_weights);
+	int r2 = fread(conv1_weights, sizeof(float), x*y*z*w, ptr_weights);
 	printf("Read weight values: %d\n", r2);
 	fclose(ptr_weights);
 
@@ -85,10 +134,10 @@ vector<vector<vector<vector<float>>>> conv1_weights(char * filename) {
 	int k = 0;
 	int count = 0;
 
-	for(i=0; i<3; ++i) {
-		for (f = 0; f<64; ++f) {
-			for (j=0; j<64; ++j) {
-				for(k=0; k<32; ++k) {
+	for(i=0; i<z; ++i) {
+		for (f = 0; f<y; ++f) {
+			for (j=0; j<x; ++j) {
+				for(k=0; k<w; ++k) {
 					reshaped_weights[i][f][j][k] = conv1_weights[count];
 					count++;
 				}
@@ -99,34 +148,7 @@ vector<vector<vector<vector<float>>>> conv1_weights(char * filename) {
 	return reshaped_weights;
 }
 
-vector<vector<vector<float>>> conv2_input(char* fileName) {
 
-	/* Input Data */
-	float conv1_inputs[12288] = { 0 }; // reshape back to 64*64*3
-	vector<vector<vector<float>>> reshaped_inputs(3, vector<vector<float>>(64, vector<float>(64, 0)));
-
-
-	FILE* ptr_input = fopen(fileName, "rb");  // r for read, b for binary
-	int r2 = fread(conv1_weights, sizeof(float), 393216, ptr_input);
-	printf("Read weight values: %d\n", r2);
-	fclose(ptr_input);
-
-	int i = 0;
-	int f = 0;
-	int j = 0;
-	int count = 0;
-
-	for (i = 0; i < 3; ++i) {
-		for (f = 0; f < 64; ++f) {
-			for (j = 0; j < 64; ++j) {
-				reshaped_inputs[i][f][j] = conv1_inputs[count];
-				count++;
-			}
-		}
-	}
-
-	return reshaped_inputs;
-}
 
 
 
