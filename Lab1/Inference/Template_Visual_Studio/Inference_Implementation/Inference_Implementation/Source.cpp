@@ -3,6 +3,7 @@
 
 // Implement the layers as functions
 
+
 int main()
 
 {
@@ -33,7 +34,7 @@ int main()
 		2. Why are the intermediate files flattened?
 		3. Are we outputing a bin file after each convolutional layer?
 		*/
-
+	return 0;
 
 		// Execute the inference code and validate against the imported inference output. 
 		// For each of the input, for all of the intermediate feature maps provide the binary files for both the imported feature maps from python (true value) and the ones predicted by your own C/C++ implementation.
@@ -69,49 +70,58 @@ vector<vector<vector<float>>> conv_input(char * fileName, int x, int y, int z) {
 	return reshaped_inputs;
 }
 
-float mult_and_accumulate(vector<<vector<vector<float>>> weights_M, vector<vector<vector<float>>> input_fmap_M_partial) {
-	
+// DONE
+float mult_and_accumulate(vector<vector<vector<float>>> weights_M, vector<vector<vector<float>>> input_fmap_M_partial) {
+
 	/* Matrix Multiplication */
 	float sum = 0;
 	int x = 0;
 	int y = 0;
 	int z = 0;
 
-	for (z = 0; z < weights_C.size(); z++) {
+	for (z = 0; z < weights_C[0][0].size(); z++) {
 		for (y = 0; y < weights_C[0].size(); y++) {
-			for (x = 0; x < weights_C[0][0].size(); x++) {
-				sum += weights_C[z][y][x] * input_fmap_C_partial[][][];
+			for (x = 0; x < weights_C.size(); x++) {
+				sum += weights_C[z][y][x] * input_fmap_C_partial[z][y][x];
 			}
 		}
 	}
 	return sum;
 }
 
-vector<vector<vector<vector<float>>>> ofmap_gen(vector<vector<vector<float>>> input_fmap, vector<vector<vector<vector<float>>>> weights) {
+vector<vector<vector<float>>> ofmap_gen(vector<vector<vector<float>>> input_fmap, vector<vector<vector<vector<float>>>> weights) {
 	int x = 0;
 	int y = 0;
 	int z = 0;
 	int filter_num = 0;
 	int l = 0;
 	int m = 0;
+	int q = 0;
+	vector<vector<vector<float>>> output(weights[0][0][0].size(), vector<vector<float>>((input_fmap[0].size() - weights[0].size()) + 1), <vector<float>>((input_fmap.size() - weights.size()) + 1));
+	 
 
-	for (i = 0; i < weights[0][0].size(); i++) {
-
-		for (j = 0; j < input_fmap.size() - weights.size(); j++) {
-			for (k = 0; k < input_fmap.size() - weights.size(); k++) {
-				< vector<vector<float>> cross_section (input_fmap.size(), vector<float>(input_fmap[0].size(), 0));
-				< vector<vector<float>> fmap_cross (weights.size(), vector<float>(weights[0].size(), 0));
-				for (l=0; l<weights.size(); ++l) {
-					for(m=0; m<weights[0].size; ++m) {
-						cross_section[l][m] = weights[l][m][i][0];
+	for (filter_num = 0; filter_num < weights[0][0][0].size(); ++filter_num) {
+		for (z = 0; z < weights[0][0].size(); z++) {
+			for (y = 0; y < input_fmap[0].size() - weights[0].size(); y++) {
+				for (x = 0; x < input_fmap.size() - weights.size(); x++) {
+					vector<vector<vector<float>>> fmap_3d_section(input_fmap.size(), vector<vector<float>>(input_fmap[0].size(), vector<float>(input_fmap[0][0].size(), 0)));
+					vector<vector<vector<float>>> 3d_weights(weights.size(), vector<vector<float>>(weights[0].size(), vector<float>(weights[0][0].size(), 0)));
+					for (l = 0; l < weights[0][0].size(); ++l) {
+						for (m = 0; m < weights[0].size(; ++m) {
+							for(q = 0; q < weights.size(); ++q) {
+								3d_weights[l][m][q] = weights[l][m][q][filter_num];
+							}
+						}
 					}
-				}
-				for (l = j; l < j + weights.size(); ++l) {
-					for (m = k; m < k + weights.size(); ++m) {
-						fmap_cross[l][m] = input_fmap[l][m][i];
+					for (l = 0; l < input_fmaps[0][0].size(); ++l) {
+						for (m = y; m < y - weights[0].size(); ++m) {
+							for (q = x; q < x - weights.size(); ++q) {
+								fmap_4d_section[l][m][q] = input_fmap[l][m][q];
+							}
+						}
 					}
+					output[z][y][x] = mult_and_accumulate(3d_weights, fmap_3d_section);
 				}
-				mult_and_accumulate(cross_section, fmap_cross);
 			}
 		}
 	}
