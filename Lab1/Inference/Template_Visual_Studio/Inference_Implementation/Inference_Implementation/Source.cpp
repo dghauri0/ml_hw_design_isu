@@ -5,13 +5,21 @@
 
 using namespace std;
 
+//Function Declaration
+vector<vector<vector<float>>> image_import(const char *fileName);
+float mult_and_accumulate(vector<vector<vector<float>>> weights_C, vector<vector<vector<float>>> input_fmap_C_partial);
+vector<vector<vector<float>>> ofmap_gen_conv(vector<vector<vector<float>>> input_fmap, vector<vector<vector<vector<float>>>> weights, vector<float> bias);
+vector<float> ofmap_gen_dense(vector<float> input_fmap, vector<vector<float>> weights, vector<float> bias, int output_size, bool last_layer);
+vector<vector<vector<vector<float>>>> conv_weights(const char* filename, const int x, const int y, const int z, const int w);
+vector<vector<float>> dense_weights(const char* filename, int x, int y);
+vector<vector<vector<float>>> intermediate_compare_reshape(const char * filename, int x, int y, int z);
+vector<float> flatten(vector<vector<vector<float>>> in_layer);
+vector<float> get_biases(const char * filename, int x);
+float ReLU (float num);
+vector<vector<vector<float>>> max_pooling_2D(vector<vector<vector<float>>> ofmap_in);
+vector<float> softmax(vector<float> input);
 
 
-//template<int D, int N, int M, int s, int f>
-
-// Implement the layers as functions
-
-vector<vector<vector<float>>> image_import(char* fileName);
 
 int main()
 
@@ -39,9 +47,9 @@ int main()
 		vector<float> conv1_biases(32, 0);
 		vector<vector<vector<float>>> conv1_out(60, vector<vector<float>>(60, vector<float>(32,0)));
 		
-		conv1_image = image_import("input.bin");
-		conv1_weights = conv_weights("conv1_weights.bin", 5, 5, 3, 32);
-		conv1_biases = get_biases("conv1_biases.bin", 32);
+		conv1_image = image_import("../../Test_Input0/input.bin");
+		conv1_weights = conv_weights("../../Test_Input0/conv1_weights.bin", 5, 5, 3, 32);
+		conv1_biases = get_biases("../../Test_Input0/conv1_biases.bin", 32);
 		//First Convolutional Layer Output
 		conv1_out = ofmap_gen_conv(conv1_image, conv1_weights, conv1_biases);
 		/**
@@ -165,7 +173,7 @@ int main()
 		vector<float> dense1_out(256, 0);
 		
 
-		dense1_weights = conv_weights("dense1_weights.bin", 2048, 256);
+		dense1_weights = dense_weights("dense1_weights.bin", 2048, 256);
 		dense1_biases = get_biases("dense1_biases.bin", 256);
 		//First Dense Layer Output
 		dense1_out = ofmap_gen_dense(flat, dense1_weights, dense1_biases, 256, false);
@@ -179,7 +187,7 @@ int main()
 		vector<float> dense2_biases(200, 0);
 		vector<float> dense2_out(200, 0);
 		
-		dense2_weights = conv_weights("dense2_weights.bin", 256, 200);
+		dense2_weights = dense_weights("dense2_weights.bin", 256, 200);
 		dense2_biases = get_biases("dense2_biases.bin", 200);
 		//First Dense Layer Output
 		dense2_out = ofmap_gen_dense(dense1_out, dense2_weights, dense2_biases, 200, true);
@@ -196,7 +204,7 @@ int main()
 		// Were you able to get similar final classification probability as the python version executing? if not what was the difference.
 }
 
-vector<vector<vector<float>>> image_import(char * fileName) {
+vector<vector<vector<float>>> image_import(const char* fileName) {
 	
 	/* Input Data */
 	float conv1_inputs[12288] = { 0 }; // reshape back to x*y*z
@@ -221,7 +229,6 @@ vector<vector<vector<float>>> image_import(char * fileName) {
 			}
 		}
 	}
-
 	return reshaped_inputs;
 }
 
@@ -236,9 +243,9 @@ float mult_and_accumulate(vector<vector<vector<float>>> weights_C, vector<vector
 	int y = 0;
 	int z = 0;
 
-	for (x = 0; x < weights_C.size(); x++) {
-		for (y = 0; y < weights_C[0].size(); y++) {
-			for (z = 0; z < weights_C[0][0].size(); z++) {
+	for (x = 0; x < (int) weights_C.size(); x++) {
+		for (y = 0; y < (int) weights_C[0].size(); y++) {
+			for (z = 0; z < (int) weights_C[0][0].size(); z++) {
 				sum += weights_C[x][y][z] * input_fmap_C_partial[x][y][z];
 			}
 		}
@@ -258,29 +265,29 @@ vector<vector<vector<float>>> ofmap_gen_conv(vector<vector<vector<float>>> input
 	int m = 0;
 	int q = 0;
 
-	vector<vector<vector<float>>> output((input_fmap.size() - weights.size()) + 1), vector<vector<float>>((input_fmap[0].size() - weights[0].size()) + 1), <vector<float>>(weights[0][0][0].size(), 0);
+	vector<vector<vector<float>>> output((input_fmap.size() - weights.size()) + 1, vector<vector<float>>((input_fmap[0].size() - weights[0].size()) + 1, vector<float>(weights[0][0][0].size(), 0)));
 
-	for (filter_num = 0; filter_num < weights[0][0][0].size(); ++filter_num) { //filter number
-		for (x = 0; x < weights.size(); x++) {  // S (length) of filter.
-			for (y = 0; y < input_fmap[0].size() - weights[0].size(); y++) { //height
-				for (z = 0; z < input_fmap[0][0].size() - weights.size(); z++) { //channel
+	for (filter_num = 0; filter_num < (int) weights[0][0][0].size(); ++filter_num) { //filter number
+		for (x = 0; x < (int) weights.size(); x++) {  // S (length) of filter.
+			for (y = 0; y < (int) input_fmap[0].size() - (int) weights[0].size(); y++) { //height
+				for (z = 0; z < (int) input_fmap[0][0].size() - (int) weights.size(); z++) { //channel
 					vector<vector<vector<float>>> fmap_3d_section(weights.size(), vector<vector<float>>(weights[0].size(), vector<float>(weights[0][0].size(), 0)));
-					vector<vector<vector<float>>> 3d_weights(weights.size(), vector<vector<float>>(weights[0].size(), vector<float>(weights[0][0].size(), 0)));
-					for (l = 0; l < weights.size(); ++l) {
-						for (m = 0; m < weights[0].size(; ++m) {
-							for(q = 0; q < weights[0][0].size(); ++q) {
-								3d_weights[l][m][q] = weights[l][m][q][filter_num];
+					vector<vector<vector<float>>> threeD_weights(weights.size(), vector<vector<float>>(weights[0].size(), vector<float>(weights[0][0].size(), 0)));
+					for (l = 0; l < (int) weights.size(); ++l) {
+						for (m = 0; m < (int) weights[0].size(); ++m) {
+							for(q = 0; q < (int) weights[0][0].size(); ++q) {
+								threeD_weights[l][m][q] = weights[l][m][q][filter_num];
 							}
 						}
 					}
-					for (l = 0; l < x - input_fmaps.size(); ++l) {
-						for (m = y; m < y - weights[0].size(); ++m) {
-							for (q = x; q < weights[0][0].size(); ++q) {
+					for (l = 0; l < x - (int) input_fmap.size(); ++l) {
+						for (m = y; m < y - (int) weights[0].size(); ++m) {
+							for (q = x; q < (int) weights[0][0].size(); ++q) {
 								fmap_3d_section[l][m][q] = input_fmap[l][m][q];
 							}
 						}
 					}
-					output[x][y][filter_num] = ReLU(mult_and_accumulate(3d_weights, fmap_3d_section) + bias[filter_num]);
+					output[x][y][filter_num] = ReLU(mult_and_accumulate(threeD_weights, fmap_3d_section) + bias[filter_num]);
 				}
 			}
 		}
@@ -288,38 +295,41 @@ vector<vector<vector<float>>> ofmap_gen_conv(vector<vector<vector<float>>> input
 	return output;
 }
 
-vector<float> ofmap_gen_dense(vector<float> input_fmap, <vector<vector<float>> weights, vector<float> bias, int output_size, bool last_layer) {
+vector<float> ofmap_gen_dense(vector<float> input_fmap, vector<vector<float>> weights, vector<float> bias, int output_size, bool last_layer) {
 	int x = 0;
 	int y = 0;
 	int z = 0;
-	int multsum = 0;
+	float multsum = 0;
 
 	vector<float> output(output_size);
-		for (x=0; x<output_size; x++) {
-		multsum = 0;
-			for (y=0; y<input_fmap.size(); y++) {
-				for (z=0; z<output_size; z++) {
-					multsum += input_fmap[y]*weights[y][z];
-				}
-			}
-			if (!last_layer) {
-				output[x] = ReLU(multsum + bias[x]);
-			} else {
-				output[x] = multsum + bias[x];
+	for (x=0; x<output_size; x++) {
+	multsum = 0;
+		for (y=0; y<(int)input_fmap.size(); y++) {
+			for (z=0; z<output_size; z++) {
+				multsum +=  input_fmap[y]*weights[y][z];
 			}
 		}
-		if(last_layer) {
-			output = softmax(output);
+		if (!last_layer) {
+			output[x] = ReLU(multsum + bias[x]);
+		} 
+		else {
+			output[x] = multsum + bias[x];
 		}
+	}
+	if(last_layer) {
+		output = softmax(output);
+	}
 	return output;
 }
 
 /*
 Import weights from binary file (1D) and shape into 4D vector.
  */
-vector<vector<vector<vector<float>>>> conv_weights(char * filename, int x, int y, int z, int w) {
+vector<vector<vector<vector<float>>>> conv_weights(const char * filename, const int x, const int y, const int z, const int w) {
 	/* Weights Data */
-	float conv1_weights[x*y*z*w] = { 0 }; // reshape back to x*y*z*w
+	const int temp = x * y * z * w;
+	// float conv1_weights[temp] = { 0 }; // reshape back to x*y*z*w
+	float* conv1_weights = new float[temp]; // reshape back to x*y*z*w
 	vector<vector<vector<vector<float>>>> reshaped_weights(x, vector<vector<vector<float>>>(y, vector<vector<float>>(z, vector<float>(w, 0))));
 
 	FILE* ptr_weights = fopen(filename, "rb");  // r for read, b for binary
@@ -352,13 +362,15 @@ Import weights from binary file (1D) and shape into 2D vector for the dense laye
  */
 vector<vector<float>> dense_weights(char * filename, int x, int y) {
 	/* Weights Data */
-	float dense_weights[x*y] = { 0 }; // reshape back to x*y
-	vector<vector<float>> reshaped_weights(x, <vector<float>>(y, 0));
+	// float dense_weights[x*y] = { 0 }; // reshape back to x*y
+	float* dense_weights = new float[x * y];
+	vector<vector<float>> reshaped_weights(x, vector<float>(y, 0));
 
 	FILE* ptr_weights = fopen(filename, "rb");  // r for read, b for binary
 	int r2 = fread(dense_weights, sizeof(float), x*y, ptr_weights);
 	printf("Read weight values: %d\n", r2);
-	fclose(ptr_weights);		
+	fclose(ptr_weights);
+	int i = 0;		
 	int f = 0;
 	int count = 0;
 
@@ -374,10 +386,11 @@ vector<vector<float>> dense_weights(char * filename, int x, int y) {
 /*
  Purpose of this function is to take the intermediate layer outputs that are given to us to compare.
  */
-vector<vector<vector<float>>> intermediate_compare_reshape(char * filename, int x, int y, int z) {
+vector<vector<vector<float>>> intermediate_compare_reshape(const char * filename, int x, int y, int z) {
 	/* Weights Data */
-	float intermediate[x*y*z] = { 0 }; // reshape back to x*y*z
-	vector<vector<vector<float>>> reshaped_intermediate(x, vector<vector<vector<float>>>(y, vector<vector<float>>(z, 0)));
+	//float intermediate[x*y*z] = { 0 }; // reshape back to x*y*z
+	float* intermediate = new float[x * y * z];
+	vector<vector<vector<float>>> reshaped_intermediate(x, vector<vector<float>>(y, vector<float>(z, 0)));
 
 	FILE* ptr_intermediate = fopen(filename, "rb");  // r for read, b for binary
 	int r2 = fread(intermediate, sizeof(float), x*y*z, ptr_intermediate);
@@ -401,15 +414,15 @@ vector<vector<vector<float>>> intermediate_compare_reshape(char * filename, int 
 	return reshaped_intermediate;
 }
 
-vector<float> flatten(vector<vector<vector>>> in_layer) {
+vector<float> flatten(vector<vector<vector<float>>> in_layer) {
 	vector<float> out(in_layer.size()*in_layer[0].size()*in_layer[0][0].size(), 0);
 	int x = 0;
 	int y = 0;
 	int z = 0;
-	count = 0;
-	for(x=0; x<in_layer.size(); ++x) {
-		for(y=0; y<in_layer[0].size(); ++y) {
-			for(z=0; z<in_layer[0][0].size(); ++z) {
+	int count = 0;
+	for(x=0; x<(int)in_layer.size(); ++x) {
+		for(y=0; y<(int)in_layer[0].size(); ++y) {
+			for(z=0; z<(int)in_layer[0][0].size(); ++z) {
 				out[count] = in_layer[x][y][z];
 				count++;
 			}
@@ -422,9 +435,10 @@ vector<float> flatten(vector<vector<vector>>> in_layer) {
 /*
  Import biases from binary file.
  */
-vector<float> get_biases(char * filename, int x)
+vector<float> get_biases(char * filename, int x) {
 /* Weights Data */
-	float conv1_biases[x] = { 0 };  
+	//float conv1_biases[x] = { 0 };  
+	float* conv1_biases = new float[x];
 	vector<float>biases(x, 0);
 
 	FILE* ptr_weights = fopen(filename, "rb");  // r for read, b for binary
@@ -458,16 +472,16 @@ vector<vector<vector<float>>> max_pooling_2D(vector<vector<vector<float>>> ofmap
 	int x_sec = 0;
 	int y_sec = 0;
 
-	vector<vector<vector<float>>> output(ofmap_in.size() / 2, vector<vector<vector<float>>>(ofmap_in[0].size() / 2, vector<vector<float>>(ofmap_in[0][0].size(), 0)));
+	vector<vector<vector<float>>> output(ofmap_in.size() / 2, vector<vector<float>>(ofmap_in[0].size() / 2, vector<float>(ofmap_in[0][0].size(), 0)));
 
-	for (z = 0; z < ofmap_in[0][0].size(); z++) {
-		for (x = 0; x < ofmap_in.size(); x = x + 2) {
-			for (y = 0; y < ofmap_in[0].size(); y = y + 2) {
-				int max = 0;
+	for (z = 0; z < (int)ofmap_in[0][0].size(); z++) {
+		for (x = 0; x < (int)ofmap_in.size(); x = x + 2) {
+			for (y = 0; y < (int)ofmap_in[0].size(); y = y + 2) {
+				float max = 0;
 				for (x_sec = x; x_sec < x + 2; x_sec++) {
 					for (y_sec = y; y_sec < y + 2; y_sec++) {
-						if (ofmap_in[x_sec][y_sec] > max) {
-							max = ofmap_in[x_sec][y_sec];
+						if (ofmap_in[x_sec][y_sec][z] > max) {
+							max = ofmap_in[x_sec][y_sec][z];
 						}
 					}
 				}
@@ -484,12 +498,13 @@ vector<float> softmax(vector<float> input) {
 	vector<float> output;
 	int x = 0;
 	int y = 0;
-	int sum = 0;
-	for (x=0; x<input.size(); x++) {
+	float sum = 0;
+	for (x=0; x<(int)input.size(); x++) {
 	sum = 0;
-		for (y=0; y<input.size(); y++) {
-			sum += exp(input[y]);
+		for (y=0; y<(int)input.size(); y++) {
+			sum += (float) exp(input[y]);
 		}
-		output[x] exp(input[x])/sum;
+		output[x] = (float) exp(input[x])/sum;
 	}
 }
+
