@@ -47,11 +47,15 @@ int main()
 		vector<float> conv1_biases(32, 0);
 		vector<vector<vector<float>>> conv1_out(60, vector<vector<float>>(60, vector<float>(32,0)));
 		
-		conv1_image = image_import("../../Test_Input0/input.bin");
-		conv1_weights = conv_weights("../../Test_Input0/conv1_weights.bin", 5, 5, 3, 32);
-		conv1_biases = get_biases("../../Test_Input0/conv1_biases.bin", 32);
+		conv1_image = image_import("U:\\cpre482x\\CPRE482X\\Lab1\\Inference\\Template_Visual_Studio\\Test_Input0\\input.bin");
+		printf("%f\n", conv1_image[0][0][0]);
+		conv1_weights = conv_weights("U:\\cpre482x\\CPRE482X\\Lab1\\Inference\\Template_Visual_Studio\\Test_Input0\\conv1_weights.bin", 5, 5, 3, 32);
+		printf("%f\n", conv1_weights[0][0][0][0]);
+		conv1_biases = get_biases("U:\\cpre482x\\CPRE482X\\Lab1\\Inference\\Template_Visual_Studio\\Test_Input0\\conv1_biases.bin", 32);
+		printf("%f\n", conv1_biases[0]);
 		//First Convolutional Layer Output
 		conv1_out = ofmap_gen_conv(conv1_image, conv1_weights, conv1_biases);
+		printf("%f\n", conv1_out[0][0][0]);
 		/**
 		=========================================
 		Can do Comparisons with there output here
@@ -62,8 +66,8 @@ int main()
 		vector<float> conv2_biases(32, 0);
 		vector<vector<vector<float>>> conv2_out(56, vector<vector<float>>(56, vector<float>(32,0)));
 		
-		conv2_weights = conv_weights("conv2_weights.bin", 5, 5, 32, 32);
-		conv2_biases = get_biases("conv2_biases.bin", 32);
+		conv2_weights = conv_weights("U:\\cpre482x\\CPRE482X\\Lab1\\Inference\\Template_Visual_Studio\\Test_Input0\\conv2_weights.bin", 5, 5, 32, 32);
+		conv2_biases = get_biases("U:\\cpre482x\\CPRE482X\\Lab1\\Inference\\Template_Visual_Studio\\Test_Input0\\conv2_biases.bin", 32);
 		//second Convlolutional Layer Output
 		conv2_out = ofmap_gen_conv(conv1_out, conv2_weights, conv2_biases);
 		/**
@@ -86,8 +90,8 @@ int main()
 		vector<float> conv3_biases(64, 0);
 		vector<vector<vector<float>>> conv3_out(26, vector<vector<float>>(26, vector<float>(64,0)));
 		
-		conv3_weights = conv_weights("conv3_weights.bin", 3, 3, 32, 64);
-		conv3_biases = get_biases("conv3_biases.bin", 64);
+		conv3_weights = conv_weights("U:\\cpre482x\\CPRE482X\\Lab1\\Inference\\Template_Visual_Studio\\Test_Input0\\conv3_weights.bin", 3, 3, 32, 64);
+		conv3_biases = get_biases("U:\\cpre482x\\CPRE482X\\Lab1\\Inference\\Template_Visual_Studio\\Test_Input0\\conv3_biases.bin", 64);
 		//Third Convlolutional Layer Output
 		conv3_out = ofmap_gen_conv(pooling_out1, conv3_weights, conv3_biases);
 		/**
@@ -100,8 +104,8 @@ int main()
 		vector<float> conv4_biases(64, 0);
 		vector<vector<vector<float>>> conv4_out(24, vector<vector<float>>(24, vector<float>(64,0)));
 		
-		conv4_weights = conv_weights("conv4_weights.bin", 3, 3, 64, 64);
-		conv4_biases = get_biases("conv4_biases.bin", 64);
+		conv4_weights = conv_weights("U:\\cpre482x\\CPRE482X\\Lab1\\Inference\\Template_Visual_Studio\\Test_Input0\\conv4_weights.bin", 3, 3, 64, 64);
+		conv4_biases = get_biases("U:\\cpre482x\\CPRE482X\\Lab1\\Inference\\Template_Visual_Studio\\Test_Input0\\conv4_biases.bin", 64);
 		//Fourth Convlolutional Layer Output
 		conv4_out = ofmap_gen_conv(conv3_out, conv4_weights, conv4_biases);
 		/**
@@ -125,8 +129,8 @@ int main()
 		vector<float> conv5_biases(64, 0);
 		vector<vector<vector<float>>> conv5_out(10, vector<vector<float>>(10, vector<float>(64,0)));
 		
-		conv5_weights = conv_weights("conv5_weights.bin", 3, 3, 64, 64);
-		conv5_biases = get_biases("conv5_biases.bin", 64);
+		conv5_weights = conv_weights("U:\\cpre482x\\CPRE482X\\Lab1\\Inference\\Template_Visual_Studio\\Test_Input0\\conv5_weights.bin", 3, 3, 64, 64);
+		conv5_biases = get_biases("U:\\cpre482x\\CPRE482X\\Lab1\\Inference\\Template_Visual_Studio\\Test_Input0\\conv5_biases.bin", 64);
 		//Fifth Convlolutional Layer Output
 		conv5_out = ofmap_gen_conv(pooling_out2, conv5_weights, conv5_biases);
 		/**
@@ -139,8 +143,8 @@ int main()
 		vector<float> conv6_biases(128, 0);
 		vector<vector<vector<float>>> conv6_out(8, vector<vector<float>>(8, vector<float>(128,0)));
 		
-		conv6_weights = conv_weights("conv6_weights.bin", 3, 3, 64, 128);
-		conv6_biases = get_biases("conv6_biases.bin", 128);
+		conv6_weights = conv_weights("U:\\cpre482x\\CPRE482X\\Lab1\\Inference\\Template_Visual_Studio\\Test_Input0\\conv6_weights.bin", 3, 3, 64, 128);
+		conv6_biases = get_biases("U:\\cpre482x\\CPRE482X\\Lab1\\Inference\\Template_Visual_Studio\\Test_Input0\\conv6_biases.bin", 128);
 		//Sixth Convlolutional Layer Output
 		conv6_out = ofmap_gen_conv(conv5_out, conv6_weights, conv6_biases);
 		/**
@@ -173,8 +177,8 @@ int main()
 		vector<float> dense1_out(256, 0);
 		
 
-		dense1_weights = dense_weights("dense1_weights.bin", 2048, 256);
-		dense1_biases = get_biases("dense1_biases.bin", 256);
+		dense1_weights = dense_weights("U:\\cpre482x\\CPRE482X\\Lab1\\Inference\\Template_Visual_Studio\\Test_Input0\\dense1_weights.bin", 2048, 256);
+		dense1_biases = get_biases("U:\\cpre482x\\CPRE482X\\Lab1\\Inference\\Template_Visual_Studio\\Test_Input0\\dense1_biases.bin", 256);
 		//First Dense Layer Output
 		dense1_out = ofmap_gen_dense(flat, dense1_weights, dense1_biases, 256, false);
 		/**
@@ -187,8 +191,8 @@ int main()
 		vector<float> dense2_biases(200, 0);
 		vector<float> dense2_out(200, 0);
 		
-		dense2_weights = dense_weights("dense2_weights.bin", 256, 200);
-		dense2_biases = get_biases("dense2_biases.bin", 200);
+		dense2_weights = dense_weights("U:\\cpre482x\\CPRE482X\\Lab1\\Inference\\Template_Visual_Studio\\Test_Input0\\dense2_weights.bin", 256, 200);
+		dense2_biases = get_biases("U:\\cpre482x\\CPRE482X\\Lab1\\Inference\\Template_Visual_Studio\\Test_Input0\\dense2_biases.bin", 200);
 		//First Dense Layer Output
 		dense2_out = ofmap_gen_dense(dense1_out, dense2_weights, dense2_biases, 200, true);
 		/**
@@ -196,7 +200,7 @@ int main()
 		Can do Comparisons with there output here
 		=========================================
 		**/
-		
+		printf("done");
 	return 0;
 
 		// Execute the inference code and validate against the imported inference output. 
@@ -209,11 +213,11 @@ vector<vector<vector<float>>> image_import(const char* fileName) {
 	/* Input Data */
 	float conv1_inputs[12288] = { 0 }; // reshape back to x*y*z
 	vector<vector<vector<float>>> reshaped_inputs(64, vector<vector<float>>(64, vector<float>(3, 0)));
-
+	FILE* ptr_input;
 	
-	FILE* ptr_input = fopen(fileName, "rb");  // r for read, b for binary
+	errno_t error_num = fopen_s(&ptr_input, fileName, "rb");  // r for read, b for binary
 	int r2 = fread(conv1_inputs, sizeof(float), 12288, ptr_input);
-	printf("Read weight values: %d\n", r2);
+	printf("Read images: %d\n", r2);
 	fclose(ptr_input);
 
 	int i = 0;
@@ -301,7 +305,7 @@ vector<float> ofmap_gen_dense(vector<float> input_fmap, vector<vector<float>> we
 	int z = 0;
 	float multsum = 0;
 
-	vector<float> output(output_size);
+	vector<float> output(output_size, 0);
 	for (x=0; x<output_size; x++) {
 	multsum = 0;
 		for (y=0; y<(int)input_fmap.size(); y++) {
@@ -331,10 +335,11 @@ vector<vector<vector<vector<float>>>> conv_weights(const char * filename, const 
 	// float conv1_weights[temp] = { 0 }; // reshape back to x*y*z*w
 	float* conv1_weights = new float[temp]; // reshape back to x*y*z*w
 	vector<vector<vector<vector<float>>>> reshaped_weights(x, vector<vector<vector<float>>>(y, vector<vector<float>>(z, vector<float>(w, 0))));
+	FILE* ptr_weights;
 
-	FILE* ptr_weights = fopen(filename, "rb");  // r for read, b for binary
+	errno_t error_num = fopen_s(&ptr_weights, filename, "rb");  // r for read, b for binary
 	int r2 = fread(conv1_weights, sizeof(float), x*y*z*w, ptr_weights);
-	printf("Read weight values: %d\n", r2);
+	printf("Read weights: %d\n", r2);
 	fclose(ptr_weights);
 
 	int i = 0;
@@ -360,15 +365,16 @@ vector<vector<vector<vector<float>>>> conv_weights(const char * filename, const 
 /*
 Import weights from binary file (1D) and shape into 2D vector for the dense layer
  */
-vector<vector<float>> dense_weights(char * filename, int x, int y) {
+vector<vector<float>> dense_weights(const char * filename, int x, int y) {
 	/* Weights Data */
-	// float dense_weights[x*y] = { 0 }; // reshape back to x*y
-	float* dense_weights = new float[x * y];
+	// float dense_weight[x*y] = { 0 }; // reshape back to x*y
+	float* dense_weight = new float[x * y];
 	vector<vector<float>> reshaped_weights(x, vector<float>(y, 0));
+	FILE* ptr_weights;
 
-	FILE* ptr_weights = fopen(filename, "rb");  // r for read, b for binary
-	int r2 = fread(dense_weights, sizeof(float), x*y, ptr_weights);
-	printf("Read weight values: %d\n", r2);
+	errno_t error_num = fopen_s(&ptr_weights, filename, "rb");  // r for read, b for binary
+	int r2 = fread(dense_weight, sizeof(float), x*y, ptr_weights);
+	printf("Read dense weights: %d\n", r2);
 	fclose(ptr_weights);
 	int i = 0;		
 	int f = 0;
@@ -376,7 +382,7 @@ vector<vector<float>> dense_weights(char * filename, int x, int y) {
 
 	for(i=0; i<x; ++i) {
 		for (f = 0; f<y; ++f) {
-			reshaped_weights[i][f] = dense_weights[count];
+			reshaped_weights[i][f] = dense_weight[count];
 			count++;
 		}
 	}
@@ -391,10 +397,11 @@ vector<vector<vector<float>>> intermediate_compare_reshape(const char * filename
 	//float intermediate[x*y*z] = { 0 }; // reshape back to x*y*z
 	float* intermediate = new float[x * y * z];
 	vector<vector<vector<float>>> reshaped_intermediate(x, vector<vector<float>>(y, vector<float>(z, 0)));
+	FILE* ptr_intermediate;
 
-	FILE* ptr_intermediate = fopen(filename, "rb");  // r for read, b for binary
+	errno_t error_num = fopen_s(&ptr_intermediate, filename, "rb");  // r for read, b for binary
 	int r2 = fread(intermediate, sizeof(float), x*y*z, ptr_intermediate);
-	printf("Read weight values: %d\n", r2);
+	printf("Read intermediate images: %d\n", r2);
 	fclose(ptr_intermediate);
 
 	int i = 0;
@@ -435,15 +442,16 @@ vector<float> flatten(vector<vector<vector<float>>> in_layer) {
 /*
  Import biases from binary file.
  */
-vector<float> get_biases(char * filename, int x) {
+vector<float> get_biases(const char * filename, int x) {
 /* Weights Data */
 	//float conv1_biases[x] = { 0 };  
 	float* conv1_biases = new float[x];
 	vector<float>biases(x, 0);
 
-	FILE* ptr_weights = fopen(filename, "rb");  // r for read, b for binary
+	FILE* ptr_weights;
+	errno_t error_num = fopen_s(&ptr_weights, filename, "rb");  // r for read, b for binary
 	int r2 = fread(conv1_biases, sizeof(float), x, ptr_weights);
-	printf("Read weight values: %d\n", r2);
+	printf("Read biases: %d\n", r2);
 	fclose(ptr_weights);
 
 	int i=0;
@@ -506,5 +514,7 @@ vector<float> softmax(vector<float> input) {
 		}
 		output[x] = (float) exp(input[x])/sum;
 	}
+
+	return output;
 }
 
