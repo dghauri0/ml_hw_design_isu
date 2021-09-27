@@ -7,17 +7,17 @@ using namespace std;
 
 //Function Declaration
 vector<vector<vector<float>>> image_import(const char *fileName);
-float mult_and_accumulate(vector<vector<vector<float>>> weights_C, vector<vector<vector<float>>> input_fmap_C_partial);
-vector<vector<vector<float>>> ofmap_gen_conv(vector<vector<vector<float>>> input_fmap, vector<vector<vector<vector<float>>>> weights, vector<float> bias);
-vector<float> ofmap_gen_dense(vector<float> input_fmap, vector<vector<float>> weights, vector<float> bias, int output_size, bool last_layer);
+float mult_and_accumulate(vector<vector<vector<vector<float>>>> &weights, vector<vector<vector<float>>> &input_fmap_C_partial, int filter_num);
+vector<vector<vector<float>>> ofmap_gen_conv(vector<vector<vector<float>>> &input_fmap, vector<vector<vector<vector<float>>>> &weights, vector<float> &bias);
+vector<float> ofmap_gen_dense(vector<float> &input_fmap, vector<vector<float>> &weights, vector<float> &bias, int output_size, bool last_layer);
 vector<vector<vector<vector<float>>>> conv_weights(const char* filename, const int x, const int y, const int z, const int w);
 vector<vector<float>> dense_weights(const char* filename, int x, int y);
 vector<vector<vector<float>>> intermediate_compare_reshape(const char * filename, int x, int y, int z);
-vector<float> flatten(vector<vector<vector<float>>> in_layer);
-vector<float> get_biases(const char * filename, int x);
+vector<float> flatten(vector<vector<vector<float>>> &in_layer);
+vector<float> get_biases(const char *filename, int x);
 float ReLU (float num);
-vector<vector<vector<float>>> max_pooling_2D(vector<vector<vector<float>>> ofmap_in);
-vector<float> softmax(vector<float> input);
+vector<vector<vector<float>>> max_pooling_2D(vector<vector<vector<float>>> &ofmap_in);
+vector<float> softmax(vector<float> &input);
 
 
 
@@ -55,13 +55,13 @@ int main()
 		printf("%f\n", conv1_biases[0]);
 		//First Convolutional Layer Output
 		conv1_out = ofmap_gen_conv(conv1_image, conv1_weights, conv1_biases);
-		printf("%f\n", conv1_out[0][0][0]);
+		printf("conv1out: %f\n", conv1_out[0][0][0]);
 		/**
 		=========================================
 		Can do Comparisons with there output here
 		=========================================
 		**/
-		
+
 		vector<vector<vector<vector<float>>>> conv2_weights(5, vector<vector<vector<float>>>(5, vector<vector<float>>(32, vector<float>(32, 0))));
 		vector<float> conv2_biases(32, 0);
 		vector<vector<vector<float>>> conv2_out(56, vector<vector<float>>(56, vector<float>(32,0)));
@@ -70,21 +70,14 @@ int main()
 		conv2_biases = get_biases("U:\\cpre482x\\CPRE482X\\Lab1\\Inference\\Template_Visual_Studio\\Test_Input0\\conv2_biases.bin", 32);
 		//second Convlolutional Layer Output
 		conv2_out = ofmap_gen_conv(conv1_out, conv2_weights, conv2_biases);
-		/**
-		=========================================
-		Can do Comparisons with there output here
-		=========================================
-		**/
+		printf("conv2out: %f\n", conv2_out[0][0][0]);
 
+		/*
 		//POOLLING!!!!!!!!!!!!!
 		vector<vector<vector<float>>> pooling_out1(28, vector<vector<float>>(28, vector<float>(32,0)));
 		//First Pooling Layer Done
 		pooling_out1 = max_pooling_2D(conv2_out);
-		/**
-		=========================================
-		Can do Comparisons with there output here
-		=========================================
-		**/
+
 		
 		vector<vector<vector<vector<float>>>> conv3_weights(3, vector<vector<vector<float>>>(3, vector<vector<float>>(32, vector<float>(64, 0))));
 		vector<float> conv3_biases(64, 0);
@@ -94,11 +87,7 @@ int main()
 		conv3_biases = get_biases("U:\\cpre482x\\CPRE482X\\Lab1\\Inference\\Template_Visual_Studio\\Test_Input0\\conv3_biases.bin", 64);
 		//Third Convlolutional Layer Output
 		conv3_out = ofmap_gen_conv(pooling_out1, conv3_weights, conv3_biases);
-		/**
-		=========================================
-		Can do Comparisons with there output here
-		=========================================
-		**/
+
 		
 		vector<vector<vector<vector<float>>>> conv4_weights(3, vector<vector<vector<float>>>(3, vector<vector<float>>(64, vector<float>(64, 0))));
 		vector<float> conv4_biases(64, 0);
@@ -108,21 +97,13 @@ int main()
 		conv4_biases = get_biases("U:\\cpre482x\\CPRE482X\\Lab1\\Inference\\Template_Visual_Studio\\Test_Input0\\conv4_biases.bin", 64);
 		//Fourth Convlolutional Layer Output
 		conv4_out = ofmap_gen_conv(conv3_out, conv4_weights, conv4_biases);
-		/**
-		=========================================
-		Can do Comparisons with there output here
-		=========================================
-		**/
+
 		
 		//POOLLING!!!!!!!!!!!!!
 		vector<vector<vector<float>>> pooling_out2(12, vector<vector<float>>(12, vector<float>(64, 0)));
 		//Second Pooling Layer Done
 		pooling_out2 = max_pooling_2D(conv4_out);
-		/**
-		=========================================
-		Can do Comparisons with there output here
-		=========================================
-		**/
+
 
 
 		vector<vector<vector<vector<float>>>> conv5_weights(3, vector<vector<vector<float>>>(3, vector<vector<float>>(64, vector<float>(64, 0))));
@@ -133,11 +114,7 @@ int main()
 		conv5_biases = get_biases("U:\\cpre482x\\CPRE482X\\Lab1\\Inference\\Template_Visual_Studio\\Test_Input0\\conv5_biases.bin", 64);
 		//Fifth Convlolutional Layer Output
 		conv5_out = ofmap_gen_conv(pooling_out2, conv5_weights, conv5_biases);
-		/**
-		=========================================
-		Can do Comparisons with there output here
-		=========================================
-		**/
+
 
 		vector<vector<vector<vector<float>>>> conv6_weights(3, vector<vector<vector<float>>>(3, vector<vector<float>>(64, vector<float>(128, 0))));
 		vector<float> conv6_biases(128, 0);
@@ -147,30 +124,16 @@ int main()
 		conv6_biases = get_biases("U:\\cpre482x\\CPRE482X\\Lab1\\Inference\\Template_Visual_Studio\\Test_Input0\\conv6_biases.bin", 128);
 		//Sixth Convlolutional Layer Output
 		conv6_out = ofmap_gen_conv(conv5_out, conv6_weights, conv6_biases);
-		/**
-		=========================================
-		Can do Comparisons with there output here
-		=========================================
-		**/
 
 
 		//POOLLING!!!!!!!!!!!!!
 		vector<vector<vector<float>>> pooling_out3(4, vector<vector<float>>(4, vector<float>(128, 0)));
 		//Third Pooling Layer Done
 		pooling_out3 = max_pooling_2D(conv6_out);
-		/**
-		=========================================
-		Can do Comparisons with there output here
-		=========================================
-		**/
+
 
 		vector<float> flat = flatten(pooling_out3);
 
-		/**
-		=========================================
-		Can do Comparisons with there output here
-		=========================================
-		**/
 
 		vector<vector<float>> dense1_weights(2048, vector<float>(256, 0));
 		vector<float> dense1_biases(256, 0);
@@ -181,11 +144,7 @@ int main()
 		dense1_biases = get_biases("U:\\cpre482x\\CPRE482X\\Lab1\\Inference\\Template_Visual_Studio\\Test_Input0\\dense1_biases.bin", 256);
 		//First Dense Layer Output
 		dense1_out = ofmap_gen_dense(flat, dense1_weights, dense1_biases, 256, false);
-		/**
-		=========================================
-		Can do Comparisons with there output here
-		=========================================
-		**/
+
 
 		vector<vector<float>> dense2_weights(256, vector<float>(200, 0));
 		vector<float> dense2_biases(200, 0);
@@ -195,11 +154,16 @@ int main()
 		dense2_biases = get_biases("U:\\cpre482x\\CPRE482X\\Lab1\\Inference\\Template_Visual_Studio\\Test_Input0\\dense2_biases.bin", 200);
 		//First Dense Layer Output
 		dense2_out = ofmap_gen_dense(dense1_out, dense2_weights, dense2_biases, 200, true);
-		/**
+
 		=========================================
-		Can do Comparisons with there output here
 		=========================================
-		**/
+		=========================================
+		Commenting out Layer 1-11 to debug first layer
+		=========================================
+		=========================================
+		=========================================
+		*/
+		
 		printf("done");
 	return 0;
 
@@ -239,7 +203,7 @@ vector<vector<vector<float>>> image_import(const char* fileName) {
 /*
 Perform element-wise multiplication and partial-sum accumulation on singular filter with singular input fmap cross-section.
  */
-float mult_and_accumulate(vector<vector<vector<float>>> weights_C, vector<vector<vector<float>>> input_fmap_C_partial) {
+float mult_and_accumulate(vector<vector<vector<vector<float>>>> &weights, vector<vector<vector<float>>> &input_fmap_C_partial, int filter_num) {
 
 	/* Matrix Multiplication */
 	float sum = 0;
@@ -247,10 +211,10 @@ float mult_and_accumulate(vector<vector<vector<float>>> weights_C, vector<vector
 	int y = 0;
 	int z = 0;
 
-	for (x = 0; x < (int) weights_C.size(); x++) {
-		for (y = 0; y < (int) weights_C[0].size(); y++) {
-			for (z = 0; z < (int) weights_C[0][0].size(); z++) {
-				sum += weights_C[x][y][z] * input_fmap_C_partial[x][y][z];
+	for (x = 0; x < (int) weights.size(); x++) {
+		for (y = 0; y < (int) weights[0].size(); y++) {
+			for (z = 0; z < (int) weights[0][0].size(); z++) {
+				sum += weights[x][y][z][filter_num] * input_fmap_C_partial[x][y][z];
 			}
 		}
 	}
@@ -260,7 +224,7 @@ float mult_and_accumulate(vector<vector<vector<float>>> weights_C, vector<vector
 /*
 Generate 
  */
-vector<vector<vector<float>>> ofmap_gen_conv(vector<vector<vector<float>>> input_fmap, vector<vector<vector<vector<float>>>> weights, vector<float> bias) {
+vector<vector<vector<float>>> ofmap_gen_conv(vector<vector<vector<float>>> &input_fmap, vector<vector<vector<vector<float>>>> &weights, vector<float> &bias) {
 	int x = 0;
 	int y = 0;
 	int z = 0;
@@ -268,38 +232,110 @@ vector<vector<vector<float>>> ofmap_gen_conv(vector<vector<vector<float>>> input
 	int l = 0;
 	int m = 0;
 	int q = 0;
+	int weight_length = (int) weights.size();
+	int weight_height = (int) weights[0].size();
+	int weight_channel = (int) weights[0][0].size();
+	int weight_num = (int) weights[0][0][0].size();
+	int fmap_lenght = (int) input_fmap.size();
+	int fmap_height = (int) input_fmap[0].size();
+	int fmap_channel = (int) input_fmap[0][0].size();
 
-	vector<vector<vector<float>>> output((input_fmap.size() - weights.size()) + 1, vector<vector<float>>((input_fmap[0].size() - weights[0].size()) + 1, vector<float>(weights[0][0][0].size(), 0)));
 
-	for (filter_num = 0; filter_num < (int) weights[0][0][0].size(); ++filter_num) { //filter number
-		for (x = 0; x < (int) weights.size(); x++) {  // S (length) of filter.
-			for (y = 0; y < (int) input_fmap[0].size() - (int) weights[0].size(); y++) { //height
-				for (z = 0; z < (int) input_fmap[0][0].size() - (int) weights.size(); z++) { //channel
-					vector<vector<vector<float>>> fmap_3d_section(weights.size(), vector<vector<float>>(weights[0].size(), vector<float>(weights[0][0].size(), 0)));
-					vector<vector<vector<float>>> threeD_weights(weights.size(), vector<vector<float>>(weights[0].size(), vector<float>(weights[0][0].size(), 0)));
-					for (l = 0; l < (int) weights.size(); ++l) {
-						for (m = 0; m < (int) weights[0].size(); ++m) {
-							for(q = 0; q < (int) weights[0][0].size(); ++q) {
-								threeD_weights[l][m][q] = weights[l][m][q][filter_num];
+
+	vector<vector<vector<float>>> output((fmap_lenght - weight_length) + 1, vector<vector<float>>((fmap_height - weight_height) + 1, vector<float>(weight_num, 0)));
+	vector<vector<vector<float>>> fmap_3d_section(weight_length, vector<vector<float>>(weight_height, vector<float>(weight_channel, 0)));
+
+	for (filter_num = 0; filter_num < weight_num; filter_num++) { //filter number
+	//printf("filternum: %d\n", filter_num);
+		int g=0;
+		int d=0;
+		int s=0;
+
+		for (x = 0; x < fmap_lenght - weight_length; x++) {  // S (length) of filter.
+			for (y = 0; y < fmap_height - weight_height; y++) { //height
+				for (z = 0; z < fmap_channel; z++) { //channel
+				//printf("z: %d\n", z);
+					
+					//vector<vector<vector<float>>> threeD_weights(weight_length, vector<vector<float>>(weight_height, vector<float>(weight_channel, 0)));
+
+					// for (l = 0; l < weight_length; ++l) {
+					// 	for (m = 0; m < weight_height; ++m) {
+					// 		for(q = 0; q < weight_channel; ++q) {
+					// 			threeD_weights[l][m][q] = weights[l][m][q][filter_num];
+					// 		}
+					// 	}
+					// }
+			
+					fmap_3d_section[d][g][s] = input_fmap[x][y][z];
+					s++;
+					printf("%d\n", s);
+
+					/*
+					int d=0;
+					int g=0;
+					int s=0;
+					for (l = x; l < x + weight_length; ++l) {
+						g=0;
+						//printf("l: %d\n", l);
+						for (m = y; m < y + weight_height; ++m) {
+							//printf("m: %d\n", m);
+							s=0;
+							for (q = 0; q < weight_channel; ++q) {
+								//printf("l: %d m: %d q: %d\n", l, m, q);
+								fmap_3d_section[d][g][s] = input_fmap[l][m][q];
+								s++;
 							}
+							g++;
 						}
+						d++;
 					}
-					for (l = 0; l < x - (int) input_fmap.size(); ++l) {
-						for (m = y; m < y - (int) weights[0].size(); ++m) {
-							for (q = x; q < (int) weights[0][0].size(); ++q) {
-								fmap_3d_section[l][m][q] = input_fmap[l][m][q];
-							}
-						}
+					 */
+
+					/*
+					Debug 
+					 */
+					// int a=0;
+					// int b=0;
+					// int c=0;
+					// if(filter_num == 0) {
+					// 	for(a=0; a<(int) threeD_weights.size(); ++a) {
+					// 		for(b=0; a<(int) threeD_weights[0].size(); ++b) {
+					// 			for(c=0; a<(int) threeD_weights[0][0].size(); ++c) {
+					// 				printf("Weights: %f\n", threeD_weights[a][b][c]);
+					// 				printf("feature map: %f\n", fmap_3d_section[a][b][c]);
+					// 			}
+					// 		}
+					// 	}
+					// 	printf("bias: %f", bias[0]);
+					// }
+					if(d == (weight_length-1) && g == (weight_height-1) && s == (weight_channel-1)) {
+						output[x][y][filter_num] = ReLU(mult_and_accumulate(weights, fmap_3d_section, filter_num) + bias[filter_num]);
+						g=0;
+						d=0;
+						s=0;
+
 					}
-					output[x][y][filter_num] = ReLU(mult_and_accumulate(threeD_weights, fmap_3d_section) + bias[filter_num]);
+
+					//debug
+					// if(filter_num == 0) {
+					// 	for(a=0; a<(int) output.size(); ++a) {
+					// 		for(b=0; b<(int) output[0].size(); ++b) {
+					// 			for(c=0; c<(int) output[0][0].size(); ++c) {
+					// 				printf("Output: %f\n", output[a][b][c]);
+					// 			}
+					// 		}
+					// 	}
+					// }
 				}
+				g++;
 			}
+			d++;
 		}
 	}
 	return output;
 }
 
-vector<float> ofmap_gen_dense(vector<float> input_fmap, vector<vector<float>> weights, vector<float> bias, int output_size, bool last_layer) {
+vector<float> ofmap_gen_dense(vector<float> &input_fmap, vector<vector<float>> &weights, vector<float> &bias, int output_size, bool last_layer) {
 	int x = 0;
 	int y = 0;
 	int z = 0;
@@ -421,7 +457,7 @@ vector<vector<vector<float>>> intermediate_compare_reshape(const char * filename
 	return reshaped_intermediate;
 }
 
-vector<float> flatten(vector<vector<vector<float>>> in_layer) {
+vector<float> flatten(vector<vector<vector<float>>> &in_layer) {
 	vector<float> out(in_layer.size()*in_layer[0].size()*in_layer[0][0].size(), 0);
 	int x = 0;
 	int y = 0;
@@ -473,7 +509,7 @@ float ReLU (float num) {
 /*
 Performs 2D max pooling (i.e. on each output channel).
  */
-vector<vector<vector<float>>> max_pooling_2D(vector<vector<vector<float>>> ofmap_in) {
+vector<vector<vector<float>>> max_pooling_2D(vector<vector<vector<float>>> &ofmap_in) {
 	int x = 0;	// Length ofmap_in
 	int y = 0;  // Height ofmap_in
 	int z = 0;  // Channel ofmap_in
@@ -488,8 +524,20 @@ vector<vector<vector<float>>> max_pooling_2D(vector<vector<vector<float>>> ofmap
 				float max = 0;
 				for (x_sec = x; x_sec < x + 2; x_sec++) {
 					for (y_sec = y; y_sec < y + 2; y_sec++) {
+
+						/*
+						Debug
+						 */
+						printf("[%d][%d] value is %f\n", x_sec, y_sec, ofmap_in[x_sec][y_sec]);
+
 						if (ofmap_in[x_sec][y_sec][z] > max) {
 							max = ofmap_in[x_sec][y_sec][z];
+
+							/*
+							Debug
+							 */
+							printf("MAX found at [%d][%d] and is %f\n", x_sec, y_sec, max);
+
 						}
 					}
 				}
@@ -502,7 +550,7 @@ vector<vector<vector<float>>> max_pooling_2D(vector<vector<vector<float>>> ofmap
 }
 
 
-vector<float> softmax(vector<float> input) {
+vector<float> softmax(vector<float> &input) {
 	vector<float> output;
 	int x = 0;
 	int y = 0;
