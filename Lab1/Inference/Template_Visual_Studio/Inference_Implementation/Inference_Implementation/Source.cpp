@@ -189,9 +189,9 @@ vector<vector<vector<float>>> image_import(const char* fileName) {
 	int j = 0;
 	int count = 0;
 
-	for (i = 0; i < 64; ++i) {
-		for (f = 0; f < 64; ++f) {
-			for (j = 0; j < 3; ++j) {
+	for (i = 0; i < 64; i++) {
+		for (f = 0; f < 64; f++) {
+			for (j = 0; j < 3; j++) {
 				reshaped_inputs[i][f][j] = conv1_inputs[count];
 				count++;
 			}
@@ -239,48 +239,34 @@ vector<vector<vector<float>>> ofmap_gen_conv(vector<vector<vector<float>>> &inpu
 	int fmap_lenght = (int) input_fmap.size();
 	int fmap_height = (int) input_fmap[0].size();
 	int fmap_channel = (int) input_fmap[0][0].size();
+	float sum = 0;
 
-
+	printf("Output map height: %d\n", fmap_height-weight_height);
 
 	vector<vector<vector<float>>> output((fmap_lenght - weight_length) + 1, vector<vector<float>>((fmap_height - weight_height) + 1, vector<float>(weight_num, 0)));
 	vector<vector<vector<float>>> fmap_3d_section(weight_length, vector<vector<float>>(weight_height, vector<float>(weight_channel, 0)));
 
 	for (filter_num = 0; filter_num < weight_num; filter_num++) { //filter number
-	//printf("filternum: %d\n", filter_num);
-		int g=0;
-		int d=0;
-		int s=0;
-
-		for (x = 0; x < fmap_lenght - weight_length; x++) {  // S (length) of filter.
-			for (y = 0; y < fmap_height - weight_height; y++) { //height
+		printf("filternum: %d\n", filter_num);
+		for (x = 0; x <= fmap_lenght - weight_length; x++) {  // S (length) of filter.
+			//printf("x: %d\n", x);
+			for (y = 0; y <= fmap_height - weight_height; y++) { //height
+				//printf("y: %d\n", y);
+				//printf("%d ", weight_height);
 				for (z = 0; z < fmap_channel; z++) { //channel
+
 				//printf("z: %d\n", z);
-					
-					//vector<vector<vector<float>>> threeD_weights(weight_length, vector<vector<float>>(weight_height, vector<float>(weight_channel, 0)));
-
-					// for (l = 0; l < weight_length; ++l) {
-					// 	for (m = 0; m < weight_height; ++m) {
-					// 		for(q = 0; q < weight_channel; ++q) {
-					// 			threeD_weights[l][m][q] = weights[l][m][q][filter_num];
-					// 		}
-					// 	}
-					// }
-			
-					fmap_3d_section[d][g][s] = input_fmap[x][y][z];
-					s++;
-					printf("%d\n", s);
-
-					/*
+				
 					int d=0;
 					int g=0;
 					int s=0;
-					for (l = x; l < x + weight_length; ++l) {
+					for (l = x; l < x + weight_length; l++) {
 						g=0;
 						//printf("l: %d\n", l);
-						for (m = y; m < y + weight_height; ++m) {
+						for (m = y; m < y + weight_height; m++) {
 							//printf("m: %d\n", m);
 							s=0;
-							for (q = 0; q < weight_channel; ++q) {
+							for (q = 0; q < weight_channel; q++) {
 								//printf("l: %d m: %d q: %d\n", l, m, q);
 								fmap_3d_section[d][g][s] = input_fmap[l][m][q];
 								s++;
@@ -289,8 +275,7 @@ vector<vector<vector<float>>> ofmap_gen_conv(vector<vector<vector<float>>> &inpu
 						}
 						d++;
 					}
-					 */
-
+					 
 					/*
 					Debug 
 					 */
@@ -308,14 +293,24 @@ vector<vector<vector<float>>> ofmap_gen_conv(vector<vector<vector<float>>> &inpu
 					// 	}
 					// 	printf("bias: %f", bias[0]);
 					// }
-					if(d == (weight_length-1) && g == (weight_height-1) && s == (weight_channel-1)) {
-						output[x][y][filter_num] = ReLU(mult_and_accumulate(weights, fmap_3d_section, filter_num) + bias[filter_num]);
-						g=0;
-						d=0;
-						s=0;
-
+					
+					int a = 0;
+					int b = 0;
+					int c = 0;
+					sum = 0;
+					for (a = 0; a < weight_length ; a++) {
+						for (b = 0; b < weight_height; b++) {
+							for (c = 0; c < weight_channel ; c++) {
+								sum += weights[a][b][c][filter_num] * fmap_3d_section[a][b][c];
+							}
+						}
 					}
-
+					sum += bias[filter_num];
+					if(sum<0) {
+						sum = 0;
+					}
+					output[x][y][filter_num] = sum;
+						
 					//debug
 					// if(filter_num == 0) {
 					// 	for(a=0; a<(int) output.size(); ++a) {
@@ -327,9 +322,9 @@ vector<vector<vector<float>>> ofmap_gen_conv(vector<vector<vector<float>>> &inpu
 					// 	}
 					// }
 				}
-				g++;
+				
 			}
-			d++;
+		
 		}
 	}
 	return output;
@@ -384,10 +379,10 @@ vector<vector<vector<vector<float>>>> conv_weights(const char * filename, const 
 	int k = 0;
 	int count = 0;
 
-	for(i=0; i<x; ++i) {
-		for (f = 0; f<y; ++f) {
-			for (j=0; j<z; ++j) {
-				for(k=0; k<w; ++k) {
+	for(i=0; i<x; i++) {
+		for (f = 0; f<y; f++) {
+			for (j=0; j<z; j++) {
+				for(k=0; k<w; k++) {
 					reshaped_weights[i][f][j][k] = conv1_weights[count];
 					count++;
 				}
@@ -416,8 +411,8 @@ vector<vector<float>> dense_weights(const char * filename, int x, int y) {
 	int f = 0;
 	int count = 0;
 
-	for(i=0; i<x; ++i) {
-		for (f = 0; f<y; ++f) {
+	for(i=0; i<x; i++) {
+		for (f = 0; f<y; f++) {
 			reshaped_weights[i][f] = dense_weight[count];
 			count++;
 		}
@@ -445,9 +440,9 @@ vector<vector<vector<float>>> intermediate_compare_reshape(const char * filename
 	int j = 0;
 	int count = 0;
 
-	for(i=0; i<x; ++i) {
-		for (f = 0; f<y; ++f) {
-			for (j=0; j<z; ++j) {
+	for(i=0; i<x; i++) {
+		for (f = 0; f<y; f++) {
+			for (j=0; j<z; j++) {
 				reshaped_intermediate[i][f][j] = intermediate[count];
 				count++;
 			}
@@ -463,9 +458,9 @@ vector<float> flatten(vector<vector<vector<float>>> &in_layer) {
 	int y = 0;
 	int z = 0;
 	int count = 0;
-	for(x=0; x<(int)in_layer.size(); ++x) {
-		for(y=0; y<(int)in_layer[0].size(); ++y) {
-			for(z=0; z<(int)in_layer[0][0].size(); ++z) {
+	for(x=0; x<(int)in_layer.size(); x++) {
+		for(y=0; y<(int)in_layer[0].size(); y++) {
+			for(z=0; z<(int)in_layer[0][0].size(); z++) {
 				out[count] = in_layer[x][y][z];
 				count++;
 			}
