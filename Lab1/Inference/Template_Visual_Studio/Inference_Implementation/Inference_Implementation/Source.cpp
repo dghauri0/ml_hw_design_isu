@@ -2,20 +2,20 @@
 #include<stdlib.h>
 #include<vector>
 #include<math.h>
+#include "compare1d.h"
+#include "compare3d_diff.h"
 
 using namespace std;
 
 //Function Declaration
 vector<vector<vector<float>>> image_import(const char *fileName);
-float mult_and_accumulate(vector<vector<vector<vector<float>>>> &weights, vector<vector<vector<float>>> &input_fmap_C_partial, int filter_num);
-vector<vector<vector<float>>> ofmap_gen_conv(vector<vector<vector<float>>> &input_fmap, vector<vector<vector<vector<float>>>> &weights, vector<float> &bias);
+vector<vector<vector<float>>> ofmap_gen_conv(const vector<vector<vector<float>>> &input_fmap, const vector<vector<vector<vector<float>>>> &weights, const vector<float> &bias);
 vector<float> ofmap_gen_dense(vector<float> &input_fmap, vector<vector<float>> &weights, vector<float> &bias, int output_size, bool last_layer);
 vector<vector<vector<vector<float>>>> conv_weights(const char* filename, const int x, const int y, const int z, const int w);
 vector<vector<float>> dense_weights(const char* filename, int x, int y);
 vector<vector<vector<float>>> intermediate_compare_reshape(const char * filename, int x, int y, int z);
 vector<float> flatten(vector<vector<vector<float>>> &in_layer);
 vector<float> get_biases(const char *filename, int x);
-float ReLU (float num);
 vector<vector<vector<float>>> max_pooling_2D(vector<vector<vector<float>>> &ofmap_in);
 vector<float> softmax(vector<float> &input);
 
@@ -47,122 +47,367 @@ int main()
 		vector<float> conv1_biases(32, 0);
 		vector<vector<vector<float>>> conv1_out(60, vector<vector<float>>(60, vector<float>(32,0)));
 		
-		conv1_image = image_import("U:\\cpre482x\\CPRE482X\\Lab1\\Inference\\Template_Visual_Studio\\Test_Input0\\input.bin");
+		conv1_image = image_import("U:\\classes\\cpre482x\\labs\\Lab1\\Inference\\Template_Visual_Studio\\Test_Input0\\input.bin");
 		printf("%f\n", conv1_image[0][0][0]);
-		conv1_weights = conv_weights("U:\\cpre482x\\CPRE482X\\Lab1\\Inference\\Template_Visual_Studio\\Test_Input0\\conv1_weights.bin", 5, 5, 3, 32);
+		conv1_weights = conv_weights("U:\\classes\\cpre482x\\labs\\Lab1\\Inference\\Template_Visual_Studio\\Test_Input0\\conv1_weights.bin", 5, 5, 3, 32);
 		printf("%f\n", conv1_weights[0][0][0][0]);
-		conv1_biases = get_biases("U:\\cpre482x\\CPRE482X\\Lab1\\Inference\\Template_Visual_Studio\\Test_Input0\\conv1_biases.bin", 32);
+		conv1_biases = get_biases("U:\\classes\\cpre482x\\labs\\Lab1\\Inference\\Template_Visual_Studio\\Test_Input0\\conv1_biases.bin", 32);
 		printf("%f\n", conv1_biases[0]);
 		//First Convolutional Layer Output
 		conv1_out = ofmap_gen_conv(conv1_image, conv1_weights, conv1_biases);
-		printf("conv1out: %f\n", conv1_out[0][0][0]);
-		/**
-		=========================================
-		Can do Comparisons with there output here
-		=========================================
-		**/
+
+		vector<vector<vector<float>>> test1_inputs = intermediate_compare_reshape("U:\\classes\\cpre482x\\labs\\Lab1\\Inference\\Template_Visual_Studio\\Test_Input0\\layer_0_output.bin", 60, 60, 32);
+	
+		//Comparison
+		int i = 0;
+		int f = 0;
+		int k = 0;
+		float epsilon = 0.0001f;
+
+		float max_diff = 0;
+		float curr_diff = 0;
+
+		for (i = 0; i < 60; ++i) {
+			for (f = 0; f < 60; ++f) {
+				for (k = 0; k < 32; ++k) {
+					curr_diff = fabs(test1_inputs[i][f][k] - conv1_out[i][f][k]);
+					if (curr_diff<epsilon) {
+						//the values are equal
+					}
+					else {
+						//the values are different
+						printf("%d, %d, %d\n", i, f, k);
+					}
+					if (curr_diff > max_diff) {
+						max_diff = curr_diff;
+					}
+				}
+			}
+		}
+		printf("conv1 diff: %f\n", max_diff);
 
 		vector<vector<vector<vector<float>>>> conv2_weights(5, vector<vector<vector<float>>>(5, vector<vector<float>>(32, vector<float>(32, 0))));
 		vector<float> conv2_biases(32, 0);
 		vector<vector<vector<float>>> conv2_out(56, vector<vector<float>>(56, vector<float>(32,0)));
 		
-		conv2_weights = conv_weights("U:\\cpre482x\\CPRE482X\\Lab1\\Inference\\Template_Visual_Studio\\Test_Input0\\conv2_weights.bin", 5, 5, 32, 32);
-		conv2_biases = get_biases("U:\\cpre482x\\CPRE482X\\Lab1\\Inference\\Template_Visual_Studio\\Test_Input0\\conv2_biases.bin", 32);
+		conv2_weights = conv_weights("U:\\classes\\cpre482x\\labs\\Lab1\\Inference\\Template_Visual_Studio\\Test_Input0\\conv2_weights.bin", 5, 5, 32, 32);
+		conv2_biases = get_biases("U:\\classes\\cpre482x\\labs\\Lab1\\Inference\\Template_Visual_Studio\\Test_Input0\\conv2_biases.bin", 32);
 		//second Convlolutional Layer Output
 		conv2_out = ofmap_gen_conv(conv1_out, conv2_weights, conv2_biases);
 		printf("conv2out: %f\n", conv2_out[0][0][0]);
+		
+		//Comparison
+		vector<vector<vector<float>>> test2_inputs = intermediate_compare_reshape("U:\\classes\\cpre482x\\labs\\Lab1\\Inference\\Template_Visual_Studio\\Test_Input0\\layer_1_output.bin", 56, 56, 32);
 
-		/*
+		//Comparison
+		max_diff = 0;
+		for (i = 0; i < 56; ++i) {
+			for (f = 0; f < 56; ++f) {
+				for (k = 0; k < 32; ++k) {
+					curr_diff = fabs(test2_inputs[i][f][k] - conv2_out[i][f][k]);
+					if (curr_diff < epsilon) {
+						//the values are equal
+					}
+					else {
+						//the values are different
+						printf("%d, %d, %d\n", i, f, k);
+					}
+					if (curr_diff > max_diff) {
+						max_diff = curr_diff;
+					}
+				}
+			}
+		}
+		printf("conv2 diff: %f\n", max_diff);
+		
 		//POOLLING!!!!!!!!!!!!!
 		vector<vector<vector<float>>> pooling_out1(28, vector<vector<float>>(28, vector<float>(32,0)));
 		//First Pooling Layer Done
 		pooling_out1 = max_pooling_2D(conv2_out);
 
+		vector<vector<vector<float>>> test3_inputs = intermediate_compare_reshape("U:\\classes\\cpre482x\\labs\\Lab1\\Inference\\Template_Visual_Studio\\Test_Input0\\layer_2_output.bin", 28, 28, 32);
+
+		//Comparison
+		max_diff = 0;
+		for (i = 0; i < 28; ++i) {
+			for (f = 0; f < 28; ++f) {
+				for (k = 0; k < 32; ++k) {
+					curr_diff = fabs(test3_inputs[i][f][k] - pooling_out1[i][f][k]);
+					if (curr_diff < epsilon) {
+						//the values are equal
+					}
+					else {
+						//the values are different
+						printf("%d, %d, %d\n", i, f, k);
+					}
+					if (curr_diff > max_diff) {
+						max_diff = curr_diff;
+					}
+				}
+			}
+		}
+		printf("pooling1 diff: %f\n", max_diff);
 		
 		vector<vector<vector<vector<float>>>> conv3_weights(3, vector<vector<vector<float>>>(3, vector<vector<float>>(32, vector<float>(64, 0))));
 		vector<float> conv3_biases(64, 0);
 		vector<vector<vector<float>>> conv3_out(26, vector<vector<float>>(26, vector<float>(64,0)));
 		
-		conv3_weights = conv_weights("U:\\cpre482x\\CPRE482X\\Lab1\\Inference\\Template_Visual_Studio\\Test_Input0\\conv3_weights.bin", 3, 3, 32, 64);
-		conv3_biases = get_biases("U:\\cpre482x\\CPRE482X\\Lab1\\Inference\\Template_Visual_Studio\\Test_Input0\\conv3_biases.bin", 64);
+		conv3_weights = conv_weights("U:\\classes\\cpre482x\\labs\\Lab1\\Inference\\Template_Visual_Studio\\Test_Input0\\conv3_weights.bin", 3, 3, 32, 64);
+		conv3_biases = get_biases("U:\\classes\\cpre482x\\labs\\Lab1\\Inference\\Template_Visual_Studio\\Test_Input0\\conv3_biases.bin", 64);
 		//Third Convlolutional Layer Output
 		conv3_out = ofmap_gen_conv(pooling_out1, conv3_weights, conv3_biases);
 
+		vector<vector<vector<float>>> test4_inputs = intermediate_compare_reshape("U:\\classes\\cpre482x\\labs\\Lab1\\Inference\\Template_Visual_Studio\\Test_Input0\\layer_3_output.bin", 26, 26, 64);
+
+		//Comparison
+		max_diff = 0;
+		for (i = 0; i < 26; ++i) {
+			for (f = 0; f < 26; ++f) {
+				for (k = 0; k < 64; ++k) {
+					curr_diff = fabs(test4_inputs[i][f][k] - conv3_out[i][f][k]);
+					if (curr_diff < epsilon) {
+						//the values are equal
+					}
+					else {
+						//the values are different
+						printf("%d, %d, %d\n", i, f, k);
+					}
+					if (curr_diff > max_diff) {
+						max_diff = curr_diff;
+					}
+				}
+			}
+		}
+		printf("conv3 diff: %f\n", max_diff);
 		
 		vector<vector<vector<vector<float>>>> conv4_weights(3, vector<vector<vector<float>>>(3, vector<vector<float>>(64, vector<float>(64, 0))));
 		vector<float> conv4_biases(64, 0);
 		vector<vector<vector<float>>> conv4_out(24, vector<vector<float>>(24, vector<float>(64,0)));
 		
-		conv4_weights = conv_weights("U:\\cpre482x\\CPRE482X\\Lab1\\Inference\\Template_Visual_Studio\\Test_Input0\\conv4_weights.bin", 3, 3, 64, 64);
-		conv4_biases = get_biases("U:\\cpre482x\\CPRE482X\\Lab1\\Inference\\Template_Visual_Studio\\Test_Input0\\conv4_biases.bin", 64);
+		conv4_weights = conv_weights("U:\\classes\\cpre482x\\labs\\Lab1\\Inference\\Template_Visual_Studio\\Test_Input0\\conv4_weights.bin", 3, 3, 64, 64);
+		conv4_biases = get_biases("U:\\classes\\cpre482x\\labs\\Lab1\\Inference\\Template_Visual_Studio\\Test_Input0\\conv4_biases.bin", 64);
 		//Fourth Convlolutional Layer Output
 		conv4_out = ofmap_gen_conv(conv3_out, conv4_weights, conv4_biases);
 
+		vector<vector<vector<float>>> test5_inputs = intermediate_compare_reshape("U:\\classes\\cpre482x\\labs\\Lab1\\Inference\\Template_Visual_Studio\\Test_Input0\\layer_4_output.bin", 24, 24, 64);
+
+		//Comparison
+		max_diff = 0;
+		for (i = 0; i < 24; ++i) {
+			for (f = 0; f < 24; ++f) {
+				for (k = 0; k < 64; ++k) {
+					curr_diff = fabs(test5_inputs[i][f][k] - conv4_out[i][f][k]);
+					if (curr_diff < epsilon) {
+						//the values are equal
+					}
+					else {
+						//the values are different
+						printf("%d, %d, %d\n", i, f, k);
+					}
+					if (curr_diff > max_diff) {
+						max_diff = curr_diff;
+					}
+				}
+			}
+		}
+		printf("conv4 diff: %f\n", max_diff);
 		
 		//POOLLING!!!!!!!!!!!!!
 		vector<vector<vector<float>>> pooling_out2(12, vector<vector<float>>(12, vector<float>(64, 0)));
 		//Second Pooling Layer Done
 		pooling_out2 = max_pooling_2D(conv4_out);
 
+		vector<vector<vector<float>>> test6_inputs = intermediate_compare_reshape("U:\\classes\\cpre482x\\labs\\Lab1\\Inference\\Template_Visual_Studio\\Test_Input0\\layer_5_output.bin", 12, 12, 64);
 
+		//Comparison
+		max_diff = 0;
+		for (i = 0; i < 12; ++i) {
+			for (f = 0; f < 12; ++f) {
+				for (k = 0; k < 64; ++k) {
+					curr_diff = fabs(test6_inputs[i][f][k] - pooling_out2[i][f][k]);
+					if (curr_diff < epsilon) {
+						//the values are equal
+					}
+					else {
+						//the values are different
+						printf("%d, %d, %d\n", i, f, k);
+					}
+					if (curr_diff > max_diff) {
+						max_diff = curr_diff;
+					}
+				}
+			}
+		}
+		printf("pooling2 diff: %f\n", max_diff);
 
 		vector<vector<vector<vector<float>>>> conv5_weights(3, vector<vector<vector<float>>>(3, vector<vector<float>>(64, vector<float>(64, 0))));
 		vector<float> conv5_biases(64, 0);
 		vector<vector<vector<float>>> conv5_out(10, vector<vector<float>>(10, vector<float>(64,0)));
 		
-		conv5_weights = conv_weights("U:\\cpre482x\\CPRE482X\\Lab1\\Inference\\Template_Visual_Studio\\Test_Input0\\conv5_weights.bin", 3, 3, 64, 64);
-		conv5_biases = get_biases("U:\\cpre482x\\CPRE482X\\Lab1\\Inference\\Template_Visual_Studio\\Test_Input0\\conv5_biases.bin", 64);
+		conv5_weights = conv_weights("U:\\classes\\cpre482x\\labs\\Lab1\\Inference\\Template_Visual_Studio\\Test_Input0\\conv5_weights.bin", 3, 3, 64, 64);
+		conv5_biases = get_biases("U:\\classes\\cpre482x\\labs\\Lab1\\Inference\\Template_Visual_Studio\\Test_Input0\\conv5_biases.bin", 64);
 		//Fifth Convlolutional Layer Output
 		conv5_out = ofmap_gen_conv(pooling_out2, conv5_weights, conv5_biases);
 
+		vector<vector<vector<float>>> test7_inputs = intermediate_compare_reshape("U:\\classes\\cpre482x\\labs\\Lab1\\Inference\\Template_Visual_Studio\\Test_Input0\\layer_6_output.bin", 10, 10, 64);
+
+		//Comparison
+		max_diff = 0;
+		for (i = 0; i < 10; ++i) {
+			for (f = 0; f < 10; ++f) {
+				for (k = 0; k < 64; ++k) {
+					curr_diff = fabs(test7_inputs[i][f][k] - conv5_out[i][f][k]);
+					if (curr_diff < epsilon) {
+						//the values are equal
+					}
+					else {
+						//the values are different
+						printf("%d, %d, %d\n", i, f, k);
+					}
+					if (curr_diff > max_diff) {
+						max_diff = curr_diff;
+					}
+				}
+			}
+		}
+		printf("conv5 diff: %f\n", max_diff);
 
 		vector<vector<vector<vector<float>>>> conv6_weights(3, vector<vector<vector<float>>>(3, vector<vector<float>>(64, vector<float>(128, 0))));
 		vector<float> conv6_biases(128, 0);
 		vector<vector<vector<float>>> conv6_out(8, vector<vector<float>>(8, vector<float>(128,0)));
 		
-		conv6_weights = conv_weights("U:\\cpre482x\\CPRE482X\\Lab1\\Inference\\Template_Visual_Studio\\Test_Input0\\conv6_weights.bin", 3, 3, 64, 128);
-		conv6_biases = get_biases("U:\\cpre482x\\CPRE482X\\Lab1\\Inference\\Template_Visual_Studio\\Test_Input0\\conv6_biases.bin", 128);
+		conv6_weights = conv_weights("U:\\classes\\cpre482x\\labs\\Lab1\\Inference\\Template_Visual_Studio\\Test_Input0\\conv6_weights.bin", 3, 3, 64, 128);
+		conv6_biases = get_biases("U:\\classes\\cpre482x\\labs\\Lab1\\Inference\\Template_Visual_Studio\\Test_Input0\\conv6_biases.bin", 128);
 		//Sixth Convlolutional Layer Output
 		conv6_out = ofmap_gen_conv(conv5_out, conv6_weights, conv6_biases);
 
+		vector<vector<vector<float>>> test8_inputs = intermediate_compare_reshape("U:\\classes\\cpre482x\\labs\\Lab1\\Inference\\Template_Visual_Studio\\Test_Input0\\layer_7_output.bin", 8, 8, 128);
+
+		//Comparison
+		max_diff = 0;
+		for (i = 0; i < 8; ++i) {
+			for (f = 0; f < 8; ++f) {
+				for (k = 0; k < 128; ++k) {
+					curr_diff = fabs(test8_inputs[i][f][k] - conv6_out[i][f][k]);
+					if (curr_diff < epsilon) {
+						//the values are equal
+					}
+					else {
+						//the values are different
+						printf("%d, %d, %d\n", i, f, k);
+					}
+					if (curr_diff > max_diff) {
+						max_diff = curr_diff;
+					}
+				}
+			}
+		}
+		printf("conv6 diff: %f\n", max_diff);
 
 		//POOLLING!!!!!!!!!!!!!
 		vector<vector<vector<float>>> pooling_out3(4, vector<vector<float>>(4, vector<float>(128, 0)));
 		//Third Pooling Layer Done
 		pooling_out3 = max_pooling_2D(conv6_out);
 
+		vector<vector<vector<float>>> test9_inputs = intermediate_compare_reshape("U:\\classes\\cpre482x\\labs\\Lab1\\Inference\\Template_Visual_Studio\\Test_Input0\\layer_8_output.bin", 4, 4, 128);
+
+		//Comparison
+		max_diff = 0;
+		for (i = 0; i < 4; ++i) {
+			for (f = 0; f < 4; ++f) {
+				for (k = 0; k < 128; ++k) {
+					curr_diff = fabs(test9_inputs[i][f][k] - pooling_out3[i][f][k]);
+					if (curr_diff < epsilon) {
+						//the values are equal
+					}
+					else {
+						//the values are different
+						printf("%d, %d, %d\n", i, f, k);
+					}
+					if (curr_diff > max_diff) {
+						max_diff = curr_diff;
+					}
+				}
+			}
+		}
+		printf("pooling3 diff: %f\n", max_diff);
 
 		vector<float> flat = flatten(pooling_out3);
 
+		vector<float> test10_inputs = get_biases("U:\\classes\\cpre482x\\labs\\Lab1\\Inference\\Template_Visual_Studio\\Test_Input0\\layer_9_output.bin", 4*4*128);
+
+		//Comparison
+		max_diff = 0;
+		for (i = 0; i < 4*4*128; ++i) {
+			curr_diff = fabs(test10_inputs[i] - flat[i]);
+			if (curr_diff < epsilon) {
+				//the values are equal
+			}
+			else {
+				//the values are different
+				printf("%d, %d, %d\n", i, f, k);
+			}
+			if (curr_diff > max_diff) {
+				max_diff = curr_diff;
+			}
+		}
+		printf("flat diff: %f\n", max_diff);
 
 		vector<vector<float>> dense1_weights(2048, vector<float>(256, 0));
 		vector<float> dense1_biases(256, 0);
 		vector<float> dense1_out(256, 0);
-		
 
-		dense1_weights = dense_weights("U:\\cpre482x\\CPRE482X\\Lab1\\Inference\\Template_Visual_Studio\\Test_Input0\\dense1_weights.bin", 2048, 256);
-		dense1_biases = get_biases("U:\\cpre482x\\CPRE482X\\Lab1\\Inference\\Template_Visual_Studio\\Test_Input0\\dense1_biases.bin", 256);
+		dense1_weights = dense_weights("U:\\classes\\cpre482x\\labs\\Lab1\\Inference\\Template_Visual_Studio\\Test_Input0\\dense1_weights.bin", 2048, 256);
+		dense1_biases = get_biases("U:\\classes\\cpre482x\\labs\\Lab1\\Inference\\Template_Visual_Studio\\Test_Input0\\dense1_biases.bin", 256);
 		//First Dense Layer Output
 		dense1_out = ofmap_gen_dense(flat, dense1_weights, dense1_biases, 256, false);
 
+		vector<float> test11_inputs = get_biases("U:\\classes\\cpre482x\\labs\\Lab1\\Inference\\Template_Visual_Studio\\Test_Input0\\layer_10_output.bin", 256);
+
+		//Comparison
+		max_diff = 0;
+		for (i = 0; i < 256; ++i) {
+			curr_diff = fabs(test11_inputs[i] - dense1_out[i]);
+			if (curr_diff < epsilon) {
+				//the values are equal
+			}
+			else {
+				//the values are different
+				printf("%d, %d, %d\n", i, f, k);
+			}
+			if (curr_diff > max_diff) {
+				max_diff = curr_diff;
+			}
+		}
+		printf("dense1 diff: %f\n", max_diff);
 
 		vector<vector<float>> dense2_weights(256, vector<float>(200, 0));
 		vector<float> dense2_biases(200, 0);
 		vector<float> dense2_out(200, 0);
 		
-		dense2_weights = dense_weights("U:\\cpre482x\\CPRE482X\\Lab1\\Inference\\Template_Visual_Studio\\Test_Input0\\dense2_weights.bin", 256, 200);
-		dense2_biases = get_biases("U:\\cpre482x\\CPRE482X\\Lab1\\Inference\\Template_Visual_Studio\\Test_Input0\\dense2_biases.bin", 200);
+		dense2_weights = dense_weights("U:\\classes\\cpre482x\\labs\\Lab1\\Inference\\Template_Visual_Studio\\Test_Input0\\dense2_weights.bin", 256, 200);
+		dense2_biases = get_biases("U:\\classes\\cpre482x\\labs\\Lab1\\Inference\\Template_Visual_Studio\\Test_Input0\\dense2_biases.bin", 200);
 		//First Dense Layer Output
 		dense2_out = ofmap_gen_dense(dense1_out, dense2_weights, dense2_biases, 200, true);
 
-		=========================================
-		=========================================
-		=========================================
-		Commenting out Layer 1-11 to debug first layer
-		=========================================
-		=========================================
-		=========================================
-		*/
+		vector<float> test12_inputs = get_biases("U:\\classes\\cpre482x\\labs\\Lab1\\Inference\\Template_Visual_Studio\\Test_Input0\\layer_11_output.bin", 200);
+
+		//Comparison
+		max_diff = 0;
+		for (i = 0; i < 200; ++i) {
+			curr_diff = fabs(test12_inputs[i] - dense2_out[i]);
+			if (curr_diff < epsilon) {
+				//the values are equal
+			}
+			else {
+				//the values are different
+				printf("%d, %d, %d\n", i, f, k);
+			}
+			if (curr_diff > max_diff) {
+				max_diff = curr_diff;
+			}
+		}
+		printf("dense2 diff: %f\n", max_diff);
 		
 		printf("done");
 	return 0;
@@ -201,62 +446,58 @@ vector<vector<vector<float>>> image_import(const char* fileName) {
 }
 
 /*
-Perform element-wise multiplication and partial-sum accumulation on singular filter with singular input fmap cross-section.
+Generate 
  */
-float mult_and_accumulate(vector<vector<vector<vector<float>>>> &weights, vector<vector<vector<float>>> &input_fmap_C_partial, int filter_num) {
-
-	/* Matrix Multiplication */
-	float sum = 0;
+vector<vector<vector<float>>> ofmap_gen_conv(const vector<vector<vector<float>>> &input_fmap, const vector<vector<vector<vector<float>>>> &weights, const vector<float> &bias) {
 	int x = 0;
 	int y = 0;
 	int z = 0;
+	int filter = 0;
+	int a = 0;
+	int b = 0;
+	int c = 0;
+	int filter_length = (int) weights.size();
+	int filter_height = (int) weights[0].size();
+	int filter_channel = (int) weights[0][0].size();
+	int filter_num = (int) weights[0][0][0].size();
+	int ifmap_lenght = (int) input_fmap.size();
+	int ifmap_height = (int) input_fmap[0].size();
+	int ifmap_channel = (int) input_fmap[0][0].size();
+	float sum = 0;
 
-	for (x = 0; x < (int) weights.size(); x++) {
-		for (y = 0; y < (int) weights[0].size(); y++) {
-			for (z = 0; z < (int) weights[0][0].size(); z++) {
-				sum += weights[x][y][z][filter_num] * input_fmap_C_partial[x][y][z];
+	printf("Output map height: %d\n", ifmap_height-filter_height);
+
+	vector<vector<vector<float>>> output((ifmap_lenght - filter_length) + 1, vector<vector<float>>((ifmap_height - filter_height) + 1, vector<float>(filter_num, 0)));
+	vector<vector<vector<float>>> fmap_3d_section(filter_length, vector<vector<float>>(filter_height, vector<float>(filter_channel, 0)));
+
+	for (filter = 0; filter < filter_num; filter++) { //# of filters/# of output channels
+		//printf("filternum: %d\n", filter);
+		for (x = 0; x <= ifmap_lenght - filter_length; x++) {  // length of output
+			for (y = 0; y <= ifmap_height - filter_height; y++) { //height of output
+				for (z = 0; z < ifmap_channel; z++) { //input channel
+					for(a = 0; a < filter_length; a++) { //filter length
+						for (b = 0; b < filter_height; b++) { //filter height
+							//printf("%d\n", filter_height);
+							//printf("Y:%d\n", y);
+							//printf("A:%d B:%d\n", a, b);
+							sum += input_fmap[x+a][y+b][z] * weights[a][b][z][filter]; //MultSum Accumulation
+						}
+					}
+				}
+			output[x][y][filter] = sum + bias[filter];
+			sum = 0;
+			//ReLU
+			if (output[x][y][filter] < 0) {
+				output[x][y][filter] = 0;
+			}
 			}
 		}
 	}
-	return sum;
+return output;
 }
 
-/*
-Generate 
- */
-vector<vector<vector<float>>> ofmap_gen_conv(vector<vector<vector<float>>> &input_fmap, vector<vector<vector<vector<float>>>> &weights, vector<float> &bias) {
-	int x = 0;
-	int y = 0;
-	int z = 0;
-	int filter_num = 0;
-	int l = 0;
-	int m = 0;
-	int q = 0;
-	int weight_length = (int) weights.size();
-	int weight_height = (int) weights[0].size();
-	int weight_channel = (int) weights[0][0].size();
-	int weight_num = (int) weights[0][0][0].size();
-	int fmap_lenght = (int) input_fmap.size();
-	int fmap_height = (int) input_fmap[0].size();
-	int fmap_channel = (int) input_fmap[0][0].size();
-	float sum = 0;
-
-	printf("Output map height: %d\n", fmap_height-weight_height);
-
-	vector<vector<vector<float>>> output((fmap_lenght - weight_length) + 1, vector<vector<float>>((fmap_height - weight_height) + 1, vector<float>(weight_num, 0)));
-	vector<vector<vector<float>>> fmap_3d_section(weight_length, vector<vector<float>>(weight_height, vector<float>(weight_channel, 0)));
-
-	for (filter_num = 0; filter_num < weight_num; filter_num++) { //filter number
-		printf("filternum: %d\n", filter_num);
-		for (x = 0; x <= fmap_lenght - weight_length; x++) {  // S (length) of filter.
-			//printf("x: %d\n", x);
-			for (y = 0; y <= fmap_height - weight_height; y++) { //height
-				//printf("y: %d\n", y);
-				//printf("%d ", weight_height);
-				for (z = 0; z < fmap_channel; z++) { //channel
-
 				//printf("z: %d\n", z);
-				
+					/*
 					int d=0;
 					int g=0;
 					int s=0;
@@ -276,9 +517,9 @@ vector<vector<vector<float>>> ofmap_gen_conv(vector<vector<vector<float>>> &inpu
 						d++;
 					}
 					 
-					/*
-					Debug 
-					 */
+					
+					//Debug 
+					 
 					// int a=0;
 					// int b=0;
 					// int c=0;
@@ -321,6 +562,7 @@ vector<vector<vector<float>>> ofmap_gen_conv(vector<vector<vector<float>>> &inpu
 					// 		}
 					// 	}
 					// }
+
 				}
 				
 			}
@@ -328,33 +570,53 @@ vector<vector<vector<float>>> ofmap_gen_conv(vector<vector<vector<float>>> &inpu
 		}
 	}
 	return output;
-}
+}*/
 
 vector<float> ofmap_gen_dense(vector<float> &input_fmap, vector<vector<float>> &weights, vector<float> &bias, int output_size, bool last_layer) {
 	int x = 0;
 	int y = 0;
 	int z = 0;
-	float multsum = 0;
 
 	vector<float> output(output_size, 0);
-	for (x=0; x<output_size; x++) {
-	multsum = 0;
-		for (y=0; y<(int)input_fmap.size(); y++) {
-			for (z=0; z<output_size; z++) {
-				multsum +=  input_fmap[y]*weights[y][z];
+
+	for (x = 0; x < output_size; x++) {
+		//printf("X: %d\n", x); //debug
+		for (y = 0; y < weights.size(); y++) {
+			//printf("X: %d, Y: %d\n", x, y);
+			output[x] += input_fmap[y] * weights[y][x];
+		}
+		output[x] += bias[x];
+		if (!last_layer) {
+			if (output[x] < 0) {
+				output[x] = 0;
 			}
 		}
-		if (!last_layer) {
-			output[x] = ReLU(multsum + bias[x]);
-		} 
-		else {
-			output[x] = multsum + bias[x];
-		}
 	}
-	if(last_layer) {
+	if (last_layer) {
 		output = softmax(output);
 	}
 	return output;
+	//for (x=0; x<output_size; x++) {
+	//printf("X: %d\n",x); //debug
+	//	for (y=0; y<(int)input_fmap.size(); y++) {
+	//		for (z=0; z<output_size; z++) {
+	//			output +=  input_fmap[y]*weights[y][z];
+	//		}
+	//	}
+	//	if (!last_layer) {
+	//		output[x] = multsum + bias[x];
+	//		if(output[x] < 0) {
+	//			output[x] = 0;
+	//		}
+	//	} 
+	//	else {
+	//		output[x] = multsum + bias[x];
+	//	}
+	//}
+	//if(last_layer) {
+	//	output = softmax(output);
+	//}
+	//return output;
 }
 
 /*
@@ -493,14 +755,6 @@ vector<float> get_biases(const char * filename, int x) {
 	return biases;
 }
 
-float ReLU (float num) {
-	if (num < 0) {
-		return 0;
-	} else {
-		return num;
-	}
-}
-
 /*
 Performs 2D max pooling (i.e. on each output channel).
  */
@@ -523,7 +777,7 @@ vector<vector<vector<float>>> max_pooling_2D(vector<vector<vector<float>>> &ofma
 						/*
 						Debug
 						 */
-						printf("[%d][%d] value is %f\n", x_sec, y_sec, ofmap_in[x_sec][y_sec]);
+						//printf("[%d][%d] value is %f\n", x_sec, y_sec, ofmap_in[x_sec][y_sec]);
 
 						if (ofmap_in[x_sec][y_sec][z] > max) {
 							max = ofmap_in[x_sec][y_sec][z];
@@ -531,7 +785,7 @@ vector<vector<vector<float>>> max_pooling_2D(vector<vector<vector<float>>> &ofma
 							/*
 							Debug
 							 */
-							printf("MAX found at [%d][%d] and is %f\n", x_sec, y_sec, max);
+							//printf("MAX found at [%d][%d] and is %f\n", x_sec, y_sec, max);
 
 						}
 					}
@@ -546,13 +800,14 @@ vector<vector<vector<float>>> max_pooling_2D(vector<vector<vector<float>>> &ofma
 
 
 vector<float> softmax(vector<float> &input) {
-	vector<float> output;
+	vector<float> output(input.size(), 0);
 	int x = 0;
 	int y = 0;
 	float sum = 0;
 	for (x=0; x<(int)input.size(); x++) {
 	sum = 0;
 		for (y=0; y<(int)input.size(); y++) {
+			//printf("X: %d, Y: %d\n", x, y);
 			sum += (float) exp(input[y]);
 		}
 		output[x] = (float) exp(input[x])/sum;
@@ -560,4 +815,5 @@ vector<float> softmax(vector<float> &input) {
 
 	return output;
 }
+
 

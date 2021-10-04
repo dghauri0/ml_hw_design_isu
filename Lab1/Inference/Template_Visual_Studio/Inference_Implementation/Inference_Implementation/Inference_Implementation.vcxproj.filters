@@ -19,4 +19,12 @@
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="compare1d.h">
+      <Filter>Resource Files</Filter>
+    </ClInclude>
+    <ClInclude Include="compare3d_diff.h">
+      <Filter>Resource Files</Filter>
+    </ClInclude>
+  </ItemGroup>
 </Project>
