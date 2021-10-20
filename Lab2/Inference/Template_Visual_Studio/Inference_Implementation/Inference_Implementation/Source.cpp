@@ -21,7 +21,9 @@
 
 using namespace std;
 
-/* Function Declaration */
+int part = 0;
+
+// Function Declaration
 vector<vector<vector<float> > > image_import(const char* fileName);
 vector<vector<vector<float> > > ofmap_gen_conv(const vector<vector<vector<float> > > & input_fmap, const vector<vector<vector<vector<float> > > > & weights, const vector<float>& bias);
 vector<float> ofmap_gen_dense(vector<float>& input_fmap, vector<vector<float> > & weights, vector<float> & bias, int output_size, bool last_layer);
@@ -33,15 +35,31 @@ vector<float> get_biases(const char* filename, int x);
 vector<vector<vector<float> > > max_pooling_2D(vector<vector<vector<float> > > & ofmap_in);
 vector<float> softmax(vector<float> & input);
 
+// Thread-Specific Output Map Gen Function
+void* ofmap_gen_conv_threaded(void *arg);
+
+struct conv_layer {
+	
+	vector<vector<vector<float> > > *fmap;
+	vector<vector<vector<vector<float> > > > *weights;
+	vector<float>  *bias;
+	vector<vector<vector<float> > > *output;
+};
 
 int main()
 
-{
+{  
+
 
 	vector<vector<vector<float> > > conv1_image(64, vector<vector<float> >(64, vector<float>(3, 0)));
 	vector<vector<vector<vector<float> > > > conv1_weights(5, vector<vector<vector<float> > >(5, vector<vector<float> >(3, vector<float>(32, 0))));
 	vector<float> conv1_biases(32, 0);
 	vector<vector<vector<float> > > conv1_out(60, vector<vector<float> >(60, vector<float>(32, 0)));
+	vector<vector<vector<float> > > conv1_out_threaded(60, vector<vector<float> >(60, vector<float>(32, 0)));
+
+
+	struct conv_layer *conv1_struct = (struct conv_layer *) malloc (sizeof (struct conv_layer));
+	
 
 	auto begin = std::chrono::high_resolution_clock::now(); // Start measuring time
 
@@ -49,18 +67,39 @@ int main()
 	conv1_weights = conv_weights("/local/jupyter/cpre482x-lab1/Inference/Template_Visual_Studio/Test_Input0/conv1_weights.bin", 5, 5, 3, 32);
 	conv1_biases = get_biases("/local/jupyter/cpre482x-lab1/Inference/Template_Visual_Studio/Test_Input0/conv1_biases.bin", 32);
 
-	/* First Convolutional Layer Output */
+	conv1_struct->fmap = &conv1_image;
+ 	conv1_struct->weights = &conv1_weights;
+	conv1_struct->bias = &conv1_biases;
+	conv1_struct->output = &conv1_out_threaded;
+
+	// First Convolutional Layer Output
 	conv1_out = ofmap_gen_conv(conv1_image, conv1_weights, conv1_biases);
+
+	// Thread Handler Start
+	pthread_t threads[MAX_THREAD];
+
+	int t_i = 0;
+	for (t_i = 0; t_i < MAX_THREAD; t_i++) {
+		pthread_create(&threads[t_i], NULL, ofmap_gen_conv_threaded, (void *)conv1_struct);
+	}
+
+	for (t_i = 0; t_i < MAX_THREAD; t_i++) {
+		pthread_join(threads[t_i], NULL);
+	}
+	// Thread Handler End 
+
+	conv1_out_threaded = *conv1_struct->output;
 	
 	auto end = std::chrono::high_resolution_clock::now();	// End measuring time
 	auto elapsed = std::chrono::duration_cast<std::chrono::nanoseconds>(end-begin);
 
 	printf("conv1out: %f\n", conv1_out[0][0][0]);
+	printf("conv1out_threaded: %f\n", conv1_out_threaded[0][0][0]);
 
-
+	/*
 	vector<vector<vector<float> > > test1_inputs = intermediate_compare_reshape("/local/jupyter/cpre482x-lab1/Inference/Template_Visual_Studio/Test_Input0/layer_0_output.bin", 60, 60, 32);
 
-	/* Comparison */
+	// Comparison
 	int i = 0;
 	int f = 0;
 	int k = 0;
@@ -98,7 +137,7 @@ int main()
 	conv2_weights = conv_weights("/local/jupyter/cpre482x-lab1/Inference/Template_Visual_Studio/Test_Input0/conv2_weights.bin", 5, 5, 32, 32);
 	conv2_biases = get_biases("/local/jupyter/cpre482x-lab1/Inference/Template_Visual_Studio/Test_Input0/conv2_biases.bin", 32);
 
-	/* Second Convlolutional Layer Output */
+	// Second Convlolutional Layer Output 
 	conv2_out = ofmap_gen_conv(conv1_out, conv2_weights, conv2_biases);
 
 	end = std::chrono::high_resolution_clock::now();	// End measuring time
@@ -109,7 +148,7 @@ int main()
 
 	vector<vector<vector<float> > > test2_inputs = intermediate_compare_reshape("/local/jupyter/cpre482x-lab1/Inference/Template_Visual_Studio/Test_Input0/layer_1_output.bin", 56, 56, 32);
 
-	/* Comparison */
+	// Comparison 
 	max_diff = 0;
 	for (i = 0; i < 56; ++i) {
 		for (f = 0; f < 56; ++f) {
@@ -131,7 +170,7 @@ int main()
 	printf("conv2 diff: %f\n", max_diff);
 	printf("conv2time: %.3f seconds.\n", elapsed.count() * 1e-9);	// Report time.
 
-	/* First Pooling Layer Output  */
+	// First Pooling Layer Output  
 	vector<vector<vector<float> > > pooling_out1(28, vector<vector<float> >(28, vector<float>(32, 0)));
 
 	begin = std::chrono::high_resolution_clock::now(); // Start measuring time
@@ -143,7 +182,7 @@ int main()
 
 	vector<vector<vector<float> > > test3_inputs = intermediate_compare_reshape("/local/jupyter/cpre482x-lab1/Inference/Template_Visual_Studio/Test_Input0/layer_2_output.bin", 28, 28, 32);
 
-	/* Comparison */
+	// Comparison 
 	max_diff = 0;
 	for (i = 0; i < 28; ++i) {
 		for (f = 0; f < 28; ++f) {
@@ -175,7 +214,7 @@ int main()
 	conv3_weights = conv_weights("/local/jupyter/cpre482x-lab1/Inference/Template_Visual_Studio/Test_Input0/conv3_weights.bin", 3, 3, 32, 64);
 	conv3_biases = get_biases("/local/jupyter/cpre482x-lab1/Inference/Template_Visual_Studio/Test_Input0/conv3_biases.bin", 64);
 
-	/* Third Convolutional Layer Output */
+	// Third Convolutional Layer Output 
 	conv3_out = ofmap_gen_conv(pooling_out1, conv3_weights, conv3_biases);
 
 	end = std::chrono::high_resolution_clock::now();	// End measuring time
@@ -183,7 +222,7 @@ int main()
 
 	vector<vector<vector<float> > > test4_inputs = intermediate_compare_reshape("/local/jupyter/cpre482x-lab1/Inference/Template_Visual_Studio/Test_Input0/layer_3_output.bin", 26, 26, 64);
 
-	/* Comparison */
+	// Comparison 
 	max_diff = 0;
 	for (i = 0; i < 26; ++i) {
 		for (f = 0; f < 26; ++f) {
@@ -214,7 +253,7 @@ int main()
 	conv4_weights = conv_weights("/local/jupyter/cpre482x-lab1/Inference/Template_Visual_Studio/Test_Input0/conv4_weights.bin", 3, 3, 64, 64);
 	conv4_biases = get_biases("/local/jupyter/cpre482x-lab1/Inference/Template_Visual_Studio/Test_Input0/conv4_biases.bin", 64);
 
-	/* Fourth Convlolutional Layer Output */
+	// Fourth Convlolutional Layer Output 
 	conv4_out = ofmap_gen_conv(conv3_out, conv4_weights, conv4_biases);
 
 	end = std::chrono::high_resolution_clock::now();	// End measuring time
@@ -222,7 +261,7 @@ int main()
 
 	vector<vector<vector<float> > > test5_inputs = intermediate_compare_reshape("/local/jupyter/cpre482x-lab1/Inference/Template_Visual_Studio/Test_Input0/layer_4_output.bin", 24, 24, 64);
 
-	/* Comparison */
+	// Comparison 
 	max_diff = 0;
 	for (i = 0; i < 24; ++i) {
 		for (f = 0; f < 24; ++f) {
@@ -245,7 +284,7 @@ int main()
 	printf("conv4time: %.3f seconds.\n", elapsed.count() * 1e-9);	// Report time.
 
 
-	/* Second Pooling Layer Output */
+	// Second Pooling Layer Output 
 	vector<vector<vector<float> > > pooling_out2(12, vector<vector<float> >(12, vector<float>(64, 0)));
 
 	begin = std::chrono::high_resolution_clock::now(); // Start measuring time
@@ -257,7 +296,7 @@ int main()
 
 	vector<vector<vector<float> > > test6_inputs = intermediate_compare_reshape("/local/jupyter/cpre482x-lab1/Inference/Template_Visual_Studio/Test_Input0/layer_5_output.bin", 12, 12, 64);
 
-	/* Comparison */
+	// Comparison 
 	max_diff = 0;
 	for (i = 0; i < 12; ++i) {
 		for (f = 0; f < 12; ++f) {
@@ -289,7 +328,7 @@ int main()
 	conv5_weights = conv_weights("/local/jupyter/cpre482x-lab1/Inference/Template_Visual_Studio/Test_Input0/conv5_weights.bin", 3, 3, 64, 64);
 	conv5_biases = get_biases("/local/jupyter/cpre482x-lab1/Inference/Template_Visual_Studio/Test_Input0/conv5_biases.bin", 64);
 
-	/* Fifth Convolutional Layer Output */
+	// Fifth Convolutional Layer Output 
 	conv5_out = ofmap_gen_conv(pooling_out2, conv5_weights, conv5_biases);
 
 	end = std::chrono::high_resolution_clock::now();	// End measuring time
@@ -297,7 +336,7 @@ int main()
 
 	vector<vector<vector<float> > > test7_inputs = intermediate_compare_reshape("/local/jupyter/cpre482x-lab1/Inference/Template_Visual_Studio/Test_Input0/layer_6_output.bin", 10, 10, 64);
 
-	/* Comparison */
+	// Comparison 
 	max_diff = 0;
 	for (i = 0; i < 10; ++i) {
 		for (f = 0; f < 10; ++f) {
@@ -329,7 +368,7 @@ int main()
 	conv6_weights = conv_weights("/local/jupyter/cpre482x-lab1/Inference/Template_Visual_Studio/Test_Input0/conv6_weights.bin", 3, 3, 64, 128);
 	conv6_biases = get_biases("/local/jupyter/cpre482x-lab1/Inference/Template_Visual_Studio/Test_Input0/conv6_biases.bin", 128);
 
-	/* Sixth Convlolutional Layer Output */
+	// Sixth Convlolutional Layer Output 
 	conv6_out = ofmap_gen_conv(conv5_out, conv6_weights, conv6_biases);
 
 	end = std::chrono::high_resolution_clock::now();	// End measuring time
@@ -337,7 +376,7 @@ int main()
 
 	vector<vector<vector<float> > > test8_inputs = intermediate_compare_reshape("/local/jupyter/cpre482x-lab1/Inference/Template_Visual_Studio/Test_Input0/layer_7_output.bin", 8, 8, 128);
 
-	/* Comparison */
+	// Comparison 
 	max_diff = 0;
 	for (i = 0; i < 8; ++i) {
 		for (f = 0; f < 8; ++f) {
@@ -360,7 +399,7 @@ int main()
 	printf("conv6time: %.3f seconds.\n", elapsed.count() * 1e-9);	// Report time.
 
 
-	/* Third Pooling Layer Output  */
+	// Third Pooling Layer Output  
 	vector<vector<vector<float> > > pooling_out3(4, vector<vector<float> >(4, vector<float>(128, 0)));
 	
 	begin = std::chrono::high_resolution_clock::now(); // Start measuring time
@@ -372,7 +411,7 @@ int main()
 
 	vector<vector<vector<float> > > test9_inputs = intermediate_compare_reshape("/local/jupyter/cpre482x-lab1/Inference/Template_Visual_Studio/Test_Input0/layer_8_output.bin", 4, 4, 128);
 
-	/* Comparison */
+	// Comparison 
 	max_diff = 0;
 	for (i = 0; i < 4; ++i) {
 		for (f = 0; f < 4; ++f) {
@@ -403,7 +442,7 @@ int main()
 
 	vector<float> test10_inputs = get_biases("/local/jupyter/cpre482x-lab1/Inference/Template_Visual_Studio/Test_Input0/layer_9_output.bin", 4 * 4 * 128);
 
-	/* Comparison */
+	// Comparison 
 	max_diff = 0;
 	for (i = 0; i < 4 * 4 * 128; ++i) {
 		curr_diff = fabs(test10_inputs[i] - flat[i]);
@@ -432,7 +471,7 @@ int main()
 	dense1_weights = dense_weights("/local/jupyter/cpre482x-lab1/Inference/Template_Visual_Studio/Test_Input0/dense1_weights.bin", 2048, 256);
 	dense1_biases = get_biases("/local/jupyter/cpre482x-lab1/Inference/Template_Visual_Studio/Test_Input0/dense1_biases.bin", 256);
 
-	/* First Dense Layer Output */
+	// First Dense Layer Output 
 	dense1_out = ofmap_gen_dense(flat, dense1_weights, dense1_biases, 256, false);
 
 	end = std::chrono::high_resolution_clock::now();	// End measuring time
@@ -440,7 +479,7 @@ int main()
 
 	vector<float> test11_inputs = get_biases("/local/jupyter/cpre482x-lab1/Inference/Template_Visual_Studio/Test_Input0/layer_10_output.bin", 256);
 
-	/* Comparison */
+	// Comparison 
 	max_diff = 0;
 	for (i = 0; i < 256; ++i) {
 		curr_diff = fabs(test11_inputs[i] - dense1_out[i]);
@@ -469,7 +508,7 @@ int main()
 	dense2_weights = dense_weights("/local/jupyter/cpre482x-lab1/Inference/Template_Visual_Studio/Test_Input0/dense2_weights.bin", 256, 200);
 	dense2_biases = get_biases("/local/jupyter/cpre482x-lab1/Inference/Template_Visual_Studio/Test_Input0/dense2_biases.bin", 200);
 
-	/* Second Dense Layer Output */
+	// Second Dense Layer Output
 	dense2_out = ofmap_gen_dense(dense1_out, dense2_weights, dense2_biases, 200, true);
 
 	end = std::chrono::high_resolution_clock::now();	// End measuring time
@@ -477,7 +516,7 @@ int main()
 
 	vector<float> test12_inputs = get_biases("/local/jupyter/cpre482x-lab1/Inference/Template_Visual_Studio/Test_Input0/layer_11_output.bin", 200);
 
-	/* Comparison */
+	// Comparison 
 	max_diff = 0;
 	for (i = 0; i < 200; ++i) {
 		curr_diff = fabs(test12_inputs[i] - dense2_out[i]);
@@ -495,10 +534,53 @@ int main()
 	printf("dense2 diff: %f\n", max_diff);
 	printf("dense2time: %.3f seconds.\n", elapsed.count() * 1e-9);	// Report time.
 
-
+	*/
 	printf("done");
 	return 0;
 
+}
+
+// pthread_create(&tid, NULL, hello, (void *)Allen);
+
+void* ofmap_gen_conv_threaded(void *arg) {
+	int thread_part = part++;
+	struct conv_layer data = *((struct conv_layer*) arg);
+
+	int i=0;
+	int x=0;
+	int y=0;
+	int z=0;
+	int a=0;
+	int b=0;
+	int filter_length = data.weights->size();
+	int filter_height = (data.weights->at(0)).size();
+	int filter_channel = ((data.weights->at(0)).at(0)).size();
+	int filter_num = (((data.weights->at(0)).at(0)).at(0)).size();
+	int ifmap_lenght = data.fmap->size();
+	int ifmap_height = (data.fmap->at(0)).size();
+	int ifmap_channel = ((data.fmap->at(0)).at(0)).size();
+	float sum = 0;
+	
+	for(i=thread_part*(filter_num/MAX_THREAD); i< (thread_part+1)*(filter_num/MAX_THREAD); ++i) {
+		for (x = 0; x <= ifmap_lenght - filter_length; x++) {									/* length of output */
+			for (y = 0; y <= ifmap_height - filter_height; y++) {								/* height of output */
+				for (z = 0; z < ifmap_channel; z++) {											/* input channel */
+					for (a = 0; a < filter_length; a++) {										/* filter length */
+						for (b = 0; b < filter_height; b++) {									/* filter height */
+							sum += ((data.fmap->at(x+a)).at(y+b)).at(z) * (((data.weights->at(a)).at(b)).at(z)).at(i);	/* MultSum Accumulation */
+						}
+					}
+				}
+				((data.output->at(x)).at(y)).at(i) = sum + data.bias->at(i);
+				sum = 0;
+
+				/* ReLU */
+				if (((data.output->at(x)).at(y)).at(i) < 0) {
+					((data.output->at(x)).at(y)).at(i) = 0;
+				}
+			}
+		}
+	}
 }
 
 vector<vector<vector<float> > > image_import(const char* fileName) {
@@ -548,10 +630,10 @@ vector<vector<vector<float> > > ofmap_gen_conv(const vector<vector<vector<float>
 	int ifmap_channel = (int)input_fmap[0][0].size();
 	float sum = 0;
 
-	printf("Output map height: %d\n", ifmap_height - filter_height);
+	//printf("Output map height: %d\n", ifmap_height - filter_height);
 
 	vector<vector<vector<float> > > output((ifmap_lenght - filter_length) + 1, vector<vector<float> >((ifmap_height - filter_height) + 1, vector<float>(filter_num, 0)));
-	vector<vector<vector<float> > > fmap_3d_section(filter_length, vector<vector<float> >(filter_height, vector<float>(filter_channel, 0)));
+	//vector<vector<vector<float> > > fmap_3d_section(filter_length, vector<vector<float> >(filter_height, vector<float>(filter_channel, 0)));
 
 	for (filter = 0; filter < filter_num; filter++) {											/* # of filters and # of output channels */
 		for (x = 0; x <= ifmap_lenght - filter_length; x++) {									/* length of output */
@@ -781,4 +863,3 @@ vector<float> softmax(vector<float>& input) {
 
 	return output;
 }
-
