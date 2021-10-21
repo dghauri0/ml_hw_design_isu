@@ -23,7 +23,6 @@
 using namespace std;
 
 int part = 0;
-pthread_mutex_t lock;
 
 // Function Declaration
 vector<vector<vector<float> > > image_import(const char* fileName);
@@ -49,12 +48,12 @@ struct conv_layer {
 };
 
 int main() {  
+
 	//================================================================================================
 	//================================================================================================
 	//===============CONV1 Begin======================================================================
 	//================================================================================================
 	//================================================================================================
-	pthread_mutex_init(&lock, NULL);
 
 	vector<vector<vector<float> > > conv1_image(64, vector<vector<float> >(64, vector<float>(3, 0)));
 	vector<vector<vector<vector<float> > > > conv1_weights(5, vector<vector<vector<float> > >(5, vector<vector<float> >(3, vector<float>(32, 0))));
@@ -66,7 +65,7 @@ int main() {
 	struct conv_layer *conv1_struct = (struct conv_layer *) malloc (sizeof (struct conv_layer));
 	
 
-	auto begin = std::chrono::high_resolution_clock::now(); // Start measuring time
+	//auto begin = std::chrono::high_resolution_clock::now(); // Start measuring time
 
 	conv1_image = image_import("/local/jupyter/cpre482x-lab1/Inference/Template_Visual_Studio/Test_Input0/input.bin");
 	conv1_weights = conv_weights("/local/jupyter/cpre482x-lab1/Inference/Template_Visual_Studio/Test_Input0/conv1_weights.bin", 5, 5, 3, 32);
@@ -95,8 +94,8 @@ int main() {
 
 	conv1_out_threaded = *conv1_struct->output;
 	
-	auto end = std::chrono::high_resolution_clock::now();	// End measuring time
-	auto elapsed = std::chrono::duration_cast<std::chrono::nanoseconds>(end-begin);
+	//auto end = std::chrono::high_resolution_clock::now();	// End measuring time
+	//auto elapsed = std::chrono::duration_cast<std::chrono::nanoseconds>(end-begin);
 
 	//printf("conv1out: %f\n", conv1_out[0][0][0]);
 	printf("conv1out_threaded: %f\n", conv1_out_threaded[0][0][0]);
@@ -134,7 +133,8 @@ int main() {
 		}
 	}
 	printf("conv1 diff: %f\n", max_diff);
-	printf("conv1time: %.3f seconds.\n", elapsed.count() * 1e-9);	// Report time.
+	//printf("conv1time: %.3f seconds.\n", elapsed.count() * 1e-9);	// Report time.
+	part = 0;
 	
 	
 	//================================================================================================
@@ -151,7 +151,7 @@ int main() {
 
 	struct conv_layer *conv2_struct = (struct conv_layer *) malloc (sizeof (struct conv_layer));
 
-	begin = std::chrono::high_resolution_clock::now(); // Start measuring time
+	//begin = std::chrono::high_resolution_clock::now(); // Start measuring time
 
 	conv2_weights = conv_weights("/local/jupyter/cpre482x-lab1/Inference/Template_Visual_Studio/Test_Input0/conv2_weights.bin", 5, 5, 32, 32);
 	conv2_biases = get_biases("/local/jupyter/cpre482x-lab1/Inference/Template_Visual_Studio/Test_Input0/conv2_biases.bin", 32);
@@ -181,8 +181,8 @@ int main() {
 	//conv2_out = ofmap_gen_conv(conv1_out, conv2_weights, conv2_biases);
 	
 
-	end = std::chrono::high_resolution_clock::now();	// End measuring time
-	elapsed = std::chrono::duration_cast<std::chrono::nanoseconds>(end-begin);
+	//end = std::chrono::high_resolution_clock::now();	// End measuring time
+	//elapsed = std::chrono::duration_cast<std::chrono::nanoseconds>(end-begin);
 
 	conv2_out_threaded = *conv2_struct->output;
 	
@@ -212,8 +212,8 @@ int main() {
 		}
 	}
 	printf("conv2 diff: %f\n", max_diff);
-	printf("conv2time: %.3f seconds.\n", elapsed.count() * 1e-9);	// Report time.
-
+	//printf("conv2time: %.3f seconds.\n", elapsed.count() * 1e-9);	// Report time.
+	part = 0;
 
 	//================================================================================================
 	//================================================================================================
@@ -221,16 +221,15 @@ int main() {
 	//================================================================================================
 	//================================================================================================
 
-/*
 	
 	vector<vector<vector<float> > > pooling_out1(28, vector<vector<float> >(28, vector<float>(32, 0)));
 
-	begin = std::chrono::high_resolution_clock::now(); // Start measuring time
+	//begin = std::chrono::high_resolution_clock::now(); // Start measuring time
 	
 	pooling_out1 = max_pooling_2D(conv2_out_threaded);
 
-	end = std::chrono::high_resolution_clock::now();	// End measuring time
-	elapsed = std::chrono::duration_cast<std::chrono::nanoseconds>(end-begin);
+	//end = std::chrono::high_resolution_clock::now();	// End measuring time
+	//elapsed = std::chrono::duration_cast<std::chrono::nanoseconds>(end-begin);
 
 	vector<vector<vector<float> > > test3_inputs = intermediate_compare_reshape("/local/jupyter/cpre482x-lab1/Inference/Template_Visual_Studio/Test_Input0/layer_2_output.bin", 28, 28, 32);
 
@@ -254,7 +253,7 @@ int main() {
 		}
 	}
 	printf("pooling1 diff: %f\n", max_diff);
-	printf("pooling1time: %.3f seconds.\n", elapsed.count() * 1e-9);	// Report time.
+	//printf("pooling1time: %.3f seconds.\n", elapsed.count() * 1e-9);	// Report time.
 
 
 	//================================================================================================
@@ -271,7 +270,7 @@ int main() {
 
 	struct conv_layer *conv3_struct = (struct conv_layer *) malloc (sizeof (struct conv_layer));
 
-	begin = std::chrono::high_resolution_clock::now(); // Start measuring time
+	//begin = std::chrono::high_resolution_clock::now(); // Start measuring time
 
 	conv3_weights = conv_weights("/local/jupyter/cpre482x-lab1/Inference/Template_Visual_Studio/Test_Input0/conv3_weights.bin", 3, 3, 32, 64);
 	conv3_biases = get_biases("/local/jupyter/cpre482x-lab1/Inference/Template_Visual_Studio/Test_Input0/conv3_biases.bin", 64);
@@ -298,8 +297,8 @@ int main() {
 	conv3_out_threaded = *conv3_struct->output;
 	//conv3_out = ofmap_gen_conv(pooling_out1, conv3_weights, conv3_biases);
 
-	end = std::chrono::high_resolution_clock::now();	// End measuring time
-	elapsed = std::chrono::duration_cast<std::chrono::nanoseconds>(end-begin);
+	//end = std::chrono::high_resolution_clock::now();	// End measuring time
+	//elapsed = std::chrono::duration_cast<std::chrono::nanoseconds>(end-begin);
 
 	printf("conv3out_threaded: %f\n", conv3_out_threaded[0][0][0]);
 
@@ -325,8 +324,8 @@ int main() {
 		}
 	}
 	printf("conv3 diff: %f\n", max_diff);
-	printf("conv3time: %.3f seconds.\n", elapsed.count() * 1e-9);	// Report time.
-	
+	//printf("conv3time: %.3f seconds.\n", elapsed.count() * 1e-9);	// Report time.
+	part = 0;
 	
 	//================================================================================================
 	//================================================================================================
@@ -342,7 +341,7 @@ int main() {
 
 	struct conv_layer *conv4_struct = (struct conv_layer *) malloc (sizeof (struct conv_layer));
 
-	begin = std::chrono::high_resolution_clock::now(); // Start measuring time
+	//begin = std::chrono::high_resolution_clock::now(); // Start measuring time
 
 	conv4_weights = conv_weights("/local/jupyter/cpre482x-lab1/Inference/Template_Visual_Studio/Test_Input0/conv4_weights.bin", 3, 3, 64, 64);
 	conv4_biases = get_biases("/local/jupyter/cpre482x-lab1/Inference/Template_Visual_Studio/Test_Input0/conv4_biases.bin", 64);
@@ -368,8 +367,8 @@ int main() {
 	//conv4_out = ofmap_gen_conv(conv3_out, conv4_weights, conv4_biases);
 	conv4_out_threaded = *conv4_struct->output;
 
-	end = std::chrono::high_resolution_clock::now();	// End measuring time
-	elapsed = std::chrono::duration_cast<std::chrono::nanoseconds>(end-begin);
+	//end = std::chrono::high_resolution_clock::now();	// End measuring time
+	//elapsed = std::chrono::duration_cast<std::chrono::nanoseconds>(end-begin);
 
 	printf("conv4out_threaded: %f\n", conv4_out_threaded[0][0][0]);
 
@@ -395,7 +394,9 @@ int main() {
 		}
 	}
 	printf("conv4 diff: %f\n", max_diff);
-	printf("conv4time: %.3f seconds.\n", elapsed.count() * 1e-9);	// Report time.
+	//printf("conv4time: %.3f seconds.\n", elapsed.count() * 1e-9);	// Report time.
+	part = 0;
+
 
 	//================================================================================================
 	//================================================================================================
@@ -406,12 +407,12 @@ int main() {
 	
 	vector<vector<vector<float> > > pooling_out2(12, vector<vector<float> >(12, vector<float>(64, 0)));
 
-	begin = std::chrono::high_resolution_clock::now(); // Start measuring time
+	//begin = std::chrono::high_resolution_clock::now(); // Start measuring time
 
 	pooling_out2 = max_pooling_2D(conv4_out_threaded);
 
-	end = std::chrono::high_resolution_clock::now();	// End measuring time
-	elapsed = std::chrono::duration_cast<std::chrono::nanoseconds>(end-begin);	
+	//end = std::chrono::high_resolution_clock::now();	// End measuring time
+	//elapsed = std::chrono::duration_cast<std::chrono::nanoseconds>(end-begin);	
 
 	vector<vector<vector<float> > > test6_inputs = intermediate_compare_reshape("/local/jupyter/cpre482x-lab1/Inference/Template_Visual_Studio/Test_Input0/layer_5_output.bin", 12, 12, 64);
 
@@ -435,7 +436,7 @@ int main() {
 		}
 	}
 	printf("pooling2 diff: %f\n", max_diff);
-	printf("pooling2time: %.3f seconds.\n", elapsed.count() * 1e-9);	// Report time.
+	//printf("pooling2time: %.3f seconds.\n", elapsed.count() * 1e-9);	// Report time.
 
 
 	//================================================================================================
@@ -452,12 +453,12 @@ int main() {
 
 	struct conv_layer *conv5_struct = (struct conv_layer *) malloc (sizeof (struct conv_layer));
 
-	begin = std::chrono::high_resolution_clock::now(); // Start measuring time
+	//begin = std::chrono::high_resolution_clock::now(); // Start measuring time
 
 	conv5_weights = conv_weights("/local/jupyter/cpre482x-lab1/Inference/Template_Visual_Studio/Test_Input0/conv5_weights.bin", 3, 3, 64, 64);
 	conv5_biases = get_biases("/local/jupyter/cpre482x-lab1/Inference/Template_Visual_Studio/Test_Input0/conv5_biases.bin", 64);
 
-	conv5_struct->fmap = &conv4_out_threaded;
+	conv5_struct->fmap = &pooling_out2;
  	conv5_struct->weights = &conv5_weights;
 	conv5_struct->bias = &conv5_biases;
 	conv5_struct->output = &conv5_out_threaded;
@@ -480,8 +481,8 @@ int main() {
 	conv5_out_threaded = *conv5_struct->output;
 
 
-	end = std::chrono::high_resolution_clock::now();	// End measuring time
-	elapsed = std::chrono::duration_cast<std::chrono::nanoseconds>(end-begin);	
+	//end = std::chrono::high_resolution_clock::now();	// End measuring time
+	//elapsed = std::chrono::duration_cast<std::chrono::nanoseconds>(end-begin);	
 
 	printf("conv5out_threaded: %f\n", conv5_out_threaded[0][0][0]);	
 
@@ -507,7 +508,8 @@ int main() {
 		}
 	}
 	printf("conv5 diff: %f\n", max_diff);
-	printf("conv5time: %.3f seconds.\n", elapsed.count() * 1e-9);	// Report time.
+	//printf("conv5time: %.3f seconds.\n", elapsed.count() * 1e-9);	// Report time.
+	part = 0;
 
 
 	//================================================================================================
@@ -526,7 +528,7 @@ int main() {
 	struct conv_layer *conv6_struct = (struct conv_layer *) malloc (sizeof (struct conv_layer));	
 
 
-	begin = std::chrono::high_resolution_clock::now(); // Start measuring time
+	//begin = std::chrono::high_resolution_clock::now(); // Start measuring time
 
 	conv6_weights = conv_weights("/local/jupyter/cpre482x-lab1/Inference/Template_Visual_Studio/Test_Input0/conv6_weights.bin", 3, 3, 64, 128);
 	conv6_biases = get_biases("/local/jupyter/cpre482x-lab1/Inference/Template_Visual_Studio/Test_Input0/conv6_biases.bin", 128);
@@ -553,8 +555,8 @@ int main() {
 	conv6_out_threaded = *conv6_struct->output;
 
 
-	end = std::chrono::high_resolution_clock::now();	// End measuring time
-	elapsed = std::chrono::duration_cast<std::chrono::nanoseconds>(end-begin);
+	//end = std::chrono::high_resolution_clock::now();	// End measuring time
+	//elapsed = std::chrono::duration_cast<std::chrono::nanoseconds>(end-begin);
 
 	printf("conv6out_threaded: %f\n", conv6_out_threaded[0][0][0]);	
 
@@ -581,7 +583,8 @@ int main() {
 		}
 	}
 	printf("conv6 diff: %f\n", max_diff);      
-	printf("conv6time: %.3f seconds.\n", elapsed.count() * 1e-9);	// Report time.
+	//printf("conv6time: %.3f seconds.\n", elapsed.count() * 1e-9);	// Report time.
+	part = 0;
 
 
 	//================================================================================================
@@ -593,12 +596,12 @@ int main() {
 	
 	vector<vector<vector<float> > > pooling_out3(4, vector<vector<float> >(4, vector<float>(128, 0)));
 	
-	begin = std::chrono::high_resolution_clock::now(); // Start measuring time
+	//begin = std::chrono::high_resolution_clock::now(); // Start measuring time
 	
 	pooling_out3 = max_pooling_2D(conv6_out_threaded);
 
-	end = std::chrono::high_resolution_clock::now();	// End measuring time
-	elapsed = std::chrono::duration_cast<std::chrono::nanoseconds>(end-begin);
+	//end = std::chrono::high_resolution_clock::now();	// End measuring time
+	//elapsed = std::chrono::duration_cast<std::chrono::nanoseconds>(end-begin);
 
 	vector<vector<vector<float> > > test9_inputs = intermediate_compare_reshape("/local/jupyter/cpre482x-lab1/Inference/Template_Visual_Studio/Test_Input0/layer_8_output.bin", 4, 4, 128);
 
@@ -623,9 +626,9 @@ int main() {
 	}
 	
 	printf("pooling3 diff: %f\n", max_diff);
-	printf("pooling3time: %.3f seconds.\n", elapsed.count() * 1e-9);	// Report time.
+	//printf("pooling3time: %.3f seconds.\n", elapsed.count() * 1e-9);	// Report time.
 
-	begin = std::chrono::high_resolution_clock::now(); // Start measuring time
+	//begin = std::chrono::high_resolution_clock::now(); // Start measuring time
 
 
 	//================================================================================================
@@ -637,8 +640,8 @@ int main() {
 
 	vector<float> flat = flatten(pooling_out3);
 
-	end = std::chrono::high_resolution_clock::now();	// End measuring time
-	elapsed = std::chrono::duration_cast<std::chrono::nanoseconds>(end-begin);
+	//end = std::chrono::high_resolution_clock::now();	// End measuring time
+	//elapsed = std::chrono::duration_cast<std::chrono::nanoseconds>(end-begin);
 
 	vector<float> test10_inputs = get_biases("/local/jupyter/cpre482x-lab1/Inference/Template_Visual_Studio/Test_Input0/layer_9_output.bin", 4 * 4 * 128);
 
@@ -658,7 +661,7 @@ int main() {
 		}
 	}
 	printf("flat diff: %f\n", max_diff);
-	printf("flattime: %.3f seconds.\n", elapsed.count()* 1e-9); //Report Time
+	//printf("flattime: %.3f seconds.\n", elapsed.count()* 1e-9); //Report Time
 
 	//================================================================================================
 	//================================================================================================
@@ -670,7 +673,7 @@ int main() {
 	vector<float> dense1_biases(256, 0);
 	vector<float> dense1_out(256, 0);
 
-	begin = std::chrono::high_resolution_clock::now(); // Start measuring time
+	//begin = std::chrono::high_resolution_clock::now(); // Start measuring time
 
 
 	dense1_weights = dense_weights("/local/jupyter/cpre482x-lab1/Inference/Template_Visual_Studio/Test_Input0/dense1_weights.bin", 2048, 256);
@@ -679,8 +682,8 @@ int main() {
 	// First Dense Layer Output 
 	dense1_out = ofmap_gen_dense(flat, dense1_weights, dense1_biases, 256, false);
 
-	end = std::chrono::high_resolution_clock::now();	// End measuring time
-	elapsed = std::chrono::duration_cast<std::chrono::nanoseconds>(end-begin);	
+	//end = std::chrono::high_resolution_clock::now();	// End measuring time
+	//elapsed = std::chrono::duration_cast<std::chrono::nanoseconds>(end-begin);	
 
 	vector<float> test11_inputs = get_biases("/local/jupyter/cpre482x-lab1/Inference/Template_Visual_Studio/Test_Input0/layer_10_output.bin", 256);
 
@@ -700,7 +703,7 @@ int main() {
 		}
 	}
 	printf("dense1 diff: %f\n", max_diff);
-	printf("dense1time: %.3f seconds.\n", elapsed.count() * 1e-9);	// Report time.
+	//printf("dense1time: %.3f seconds.\n", elapsed.count() * 1e-9);	// Report time.
 
 	
 	//================================================================================================
@@ -714,7 +717,7 @@ int main() {
 	vector<float> dense2_biases(200, 0);
 	vector<float> dense2_out(200, 0);
 
-	begin = std::chrono::high_resolution_clock::now(); // Start measuring time
+	//begin = std::chrono::high_resolution_clock::now(); // Start measuring time
 
 
 	dense2_weights = dense_weights("/local/jupyter/cpre482x-lab1/Inference/Template_Visual_Studio/Test_Input0/dense2_weights.bin", 256, 200);
@@ -723,8 +726,8 @@ int main() {
 	// Second Dense Layer Output
 	dense2_out = ofmap_gen_dense(dense1_out, dense2_weights, dense2_biases, 200, true);
 
-	end = std::chrono::high_resolution_clock::now();	// End measuring time
-	elapsed = std::chrono::duration_cast<std::chrono::nanoseconds>(end-begin);		
+	//end = std::chrono::high_resolution_clock::now();	// End measuring time
+	//elapsed = std::chrono::duration_cast<std::chrono::nanoseconds>(end-begin);		
 
 	vector<float> test12_inputs = get_biases("/local/jupyter/cpre482x-lab1/Inference/Template_Visual_Studio/Test_Input0/layer_11_output.bin", 200);
 
@@ -744,19 +747,15 @@ int main() {
 		}
 	}
 	printf("dense2 diff: %f\n", max_diff);
-	printf("dense2time: %.3f seconds.\n", elapsed.count() * 1e-9);	// Report time.
-*/
-	pthread_mutex_destroy(&lock);
+	//printf("dense2time: %.3f seconds.\n", elapsed.count() * 1e-9);	// Report time.
+
 	printf("done");
 	return 0;
-
 }
 
 // pthread_create(&tid, NULL, hello, (void *)Allen);
 
 void* ofmap_gen_conv_threaded(void *arg) {
-	
-	pthread_mutex_lock(&lock);
 	
 	int thread_part = part++;
 	struct conv_layer data = *((struct conv_layer*) arg);
@@ -777,7 +776,7 @@ void* ofmap_gen_conv_threaded(void *arg) {
 	float sum = 0;
 	
 	for(i=thread_part*(filter_num/MAX_THREAD); i< (thread_part+1)*(filter_num/MAX_THREAD); ++i) {
-		printf("%d ", i);
+		//printf("%d ", i);
 		for (x = 0; x <= ifmap_lenght - filter_length; x++) {									/* length of output */
 			//printf("%d ", x);
 			for (y = 0; y <= ifmap_height - filter_height; y++) {								/* height of output */
@@ -785,12 +784,13 @@ void* ofmap_gen_conv_threaded(void *arg) {
 					for (a = 0; a < filter_length; a++) {										/* filter length */
 						for (b = 0; b < filter_height; b++) {									/* filter height */
 
-							printf("%0.6f\n", (((data.weights->at(a)).at(b)).at(z)).at(i));
+							//printf("%0.6f\n", (((data.weights->at(a)).at(b)).at(z)).at(i));
 
 							sum += ((data.fmap->at(x+a)).at(y+b)).at(z) * (((data.weights->at(a)).at(b)).at(z)).at(i);	/* MultSum Accumulation */
 						}
 					}
 				}
+				//printf("%f\n", ((data.output->at(x)).at(y)).at(i));
 				((data.output->at(x)).at(y)).at(i) = sum + data.bias->at(i);
 				sum = 0;
 
@@ -801,9 +801,6 @@ void* ofmap_gen_conv_threaded(void *arg) {
 			}
 		}
 	}
-
-	pthread_mutex_unlock(&lock);
-
 }
 
 vector<vector<vector<float> > > image_import(const char* fileName) {
