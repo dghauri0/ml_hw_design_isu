@@ -809,58 +809,51 @@ int main() {
 
 // Function for taking convolutional of Layer 2 with different tiling sizes.
 vector<vector<vector<float> > > ofmap_gen_conv2_tiling(const vector<float>& input_fmap, const vector<vector<float> >& weights, const vector<float>& bias, int t_block_size) {
-	//Loop Variables
+	int x = 0;
+	int y = 0;
+	int z = 0;
 	int filter = 0;
-	int i = 0;
-	int j = 0;
-	int k = 0;
+	int a = 0;
+	int b = 0;
+	int c = 0;
+	int d = 0;
+	int filter_length = (int)weights.size();
+	int filter_height = (int)weights[0].size();
+	int filter_channel = (int)weights[0][0].size();
+	int filter_num = (int)weights[0][0][0].size();
+	int ifmap_lenght = (int)input_fmap.size();
+	int ifmap_height = (int)input_fmap[0].size();
+	int ifmap_channel = (int)input_fmap[0][0].size();
+	float sum[t_block_size] = {0};
 
-	//Variables to Define Loop Limits
-	int filter_lhc = (int)weights.size(); //weight width * height * channels
-	int filter_num = (int)weights[0].size(); //# of filters (M)
-	int ifmap_lhc = (int)input_fmap.size(); //input width* height * channels
+	//printf("Output map height: %d\n", ifmap_height - filter_height);
+
+	vector<vector<vector<float> > > output((ifmap_lenght - filter_length) + 1, vector<vector<float> >((ifmap_height - filter_height) + 1, vector<float>(filter_num, 0)));
 
 	//Variables for Summing/Accumulation
 	float ifmap_block_sum = 0;
 	float t_block_sum = 0;
 
-	vector<float> output(filter_num, 0);
+	for (filter = 0; filter < filter_num; filter++) {	/* # of filters and # of output channels */
+		for(filter_y = 0, filter_y< ifmap_height - filter_height ++filter_y) { /*move filter down*/
+			for(filter_x = 0; filter_x < ifmap_lenght - filter_length; ++filter_x) { /*move filter across*/
 
-	for (filter = 0; filter < filter_num; filter++) {											// Loop through # of filters (M)
-		for (i = 0; i < ifmap_lhc; i+=filter_lhc) {												// Loop through blocks of ifmap by max filter size
-			for (j = i; j < i + filter_lhc; j+=t_block_size) {									// Loop through ifmap block by tiling blocks
-				for (k = j; k < j + t_block_size; k++) {										// Loop through values in tiling blocks
-					t_block_sum += input_fmap[i + j + k] * weights[i + j + k][filter];			// MultSum Accumulation
+														
+				sum[filter] += input_fmap[x + a][y + b][z] * weights[a][b][z][filter];		
+						
+					
+				
+				output[x][y][filter] = sum[filter] + bias[filter];
+
+
+				/* ReLU */
+				if (output[x][y][filter] < 0) {
+					output[x][y][filter] = 0;
 				}
-				ifmap_block_sum += t_block_sum;
-				t_block_sum = 0;
-			}
 		}
-		output[filter] = ifmap_block_sum + bias[filter];
-		ifmap_block_sum = 0;
-
-		// ReLU
-		if (output[filter] < 0) {
-			output[filter] = 0;
 		}
 	}
-
-	// Shape 1d output into 3d output
-	// NOTE: RESHAPING PART OF THE TILING FUNCTION PERTAINS TO CONV2 LAYER ONLY
-	int count = 0;
-	vector<vector<vector<float> > > reshaped_output(56, vector<vector<float> > (56, vector<float> (32, 0)));
-	int f = 0;
-
-	for (i = 0; i < 56; i++) {
-		for (f = 0; f < 56; f++) {
-			for (j = 0; j < 32; j++) {
-				reshaped_output[i][f][j] = output[count];
-				count++;
-			}
-		}
-	}
-	
-	return reshaped_output;
+	return output;
 }
 
 void* ofmap_gen_conv_threaded(void *arg) {
