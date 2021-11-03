@@ -19,7 +19,7 @@
 #include <string.h>
 
 #define MAX_THREAD 2
-#define PROFILING_ITERATIONS 1
+#define PROFILING_ITERATIONS 100
 
 using namespace std;
 
@@ -36,13 +36,16 @@ vector<float> flatten(vector<vector<vector<float> > > & in_layer);
 vector<float> get_biases(const char* filename, int x);
 vector<vector<vector<float> > > max_pooling_2D(vector<vector<vector<float> > > & ofmap_in);
 vector<float> softmax(vector<float> & input);
+vector<uint8_t> uint8_input(vector<float> &input);
+vector<int8_t> int8_weights(vector<float> &weights);
+vector<int32_t> int32_biases(vector<float> &input, vector<float> &weights, vector<float> &biases);
 
 // Thread-Specific Output Map Gen Function
 void* ofmap_gen_conv_threaded(void *arg);
 
 // Tiling-Specific Output Map Gen Function
-vector<vector<vector<float> > > ofmap_gen_conv2_tiling(const vector<vector<vector<float> > >& input_fmap, const vector<vector<vector<vector<float> > > >& weights, const vector<float>& bias, int t_block_size);
-vector<vector<float> > conv_weights_tiling(const char* filename, const int x, const int y, const int z, const int w);
+vector<vector<vector<float> > > ofmap_gen_conv2_tiling(const vector<vector<vector<float> > >& input_fmap, const vector<vector<vector<vector<float> > > >& weights, const vector<float>& bias);
+
 
 struct conv_layer {
 	
@@ -52,12 +55,43 @@ struct conv_layer {
 	vector<vector<vector<float> > > *output;
 };
 
+vector<uint8_t> uint8_input(vector<float> &input) {
+	int i;
+	int size = (int) input.size();
+	vector<uint8_t> output(size, 0);	
+
+	for (i = 0; i < size; i++) {
+		output[i] = round((255 / max(abs(input[i]))) * input[i]);	
+	}
+	
+	return output;
+}
+
+vector<int8_t> int8_weights(vector<float> &weights) {
+        int i;
+	int size = (int) weights.size();
+        vector<int8_t> output(size, 0);
+
+        for (i = 0; i < size; i++) {
+                output[i] = round((127 / max(abs(weights[i]))) * weights[i]);
+        }
+        
+        return output;
+}
+
+vector<int32_t> int32_biases(vector<float> &input, vector<float> &weights, vector<float> &biases) {
+        int i;
+	int size = (int) biases.size();
+        vector<int32_t> output(size, 0);vector<int32_t> int32_biases(vector<float> &biases);
+
+        for (i = 0; i < size; i++) {
+                output[i] = round((255 / max(abs(input[i]))) * (127 / max(abs(weights[i])))  * biases[i]);
+        }
+
+        return output;
+}
 
 int main() {  
-
-	//to sent output to text file uncomment next line
-	//freopen("out.txt","w",stdout);
-
 	float time_sum_total = 0;
 
 	for (int main_i = 0; main_i < PROFILING_ITERATIONS; main_i++) {
@@ -94,15 +128,18 @@ int main() {
 		/*
 		// Thread Handler Start
 		pthread_t threads_1[MAX_THREAD];
+
 		int t_i = 0;
 		for (t_i = 0; t_i < MAX_THREAD; t_i++) {
 			pthread_create(&threads_1[t_i], NULL, ofmap_gen_conv_threaded, (void *)conv1_struct);
 		}
+
 		for (t_i = 0; t_i < MAX_THREAD; t_i++) {
 			pthread_join(threads_1[t_i], NULL);
 		}
 		// Thread Handler End 
 		
+
 		conv1_out_threaded = *conv1_struct->output;
 		*/
 		
@@ -112,7 +149,7 @@ int main() {
 		printf("conv1out: %f\n", conv1_out[0][0][0]);
 		//printf("conv1out_threaded: %f\n", conv1_out_threaded[0][0][0]);
 
-		//for (t_i = 0; t_i < MAX_THREAD; t_i++) { 
+		//for (t_i = 0; t_i < MAX_THREAD; t_i++) {
 		//	pthread_exit();
 		//}
 		
@@ -161,8 +198,8 @@ int main() {
 		
 		vector<vector<vector<vector<float> > > > conv2_weights(5, vector<vector<vector<float> > >(5, vector<vector<float> >(32, vector<float>(32, 0))));
 		vector<float> conv2_biases(32, 0);
-		//vector<vector<vector<float> > > conv2_out(56, vector<vector<float> >(56, vector<float>(32, 0)));
-		vector<vector<vector<float> > > conv2_out_tiled(56, vector<vector<float> >(56, vector<float>(32, 0)));
+		vector<vector<vector<float> > > conv2_out(56, vector<vector<float> >(56, vector<float>(32, 0)));
+		//vector<vector<vector<float> > > conv2_out_tiled(56, vector<vector<float> >(56, vector<float>(32, 0)));
 
 		//struct conv_layer *conv2_struct = (struct conv_layer *) malloc (sizeof (struct conv_layer));
 
@@ -187,11 +224,10 @@ int main() {
 		//	//printf("%d\n", t_i);
 		//	pthread_join(threads_2[t_i], NULL);
 		//}
-		// Thread Handler End
+		// Thread Handler End 
 
 		// Second Convlolutional Layer Output
-
-		conv2_out_tiled = ofmap_gen_conv2_tiling(conv1_out, conv2_weights, conv2_biases, 32);
+		conv2_out = ofmap_gen_conv(conv1_out, conv2_weights, conv2_biases);
 		
 
 		end = std::chrono::high_resolution_clock::now();	// End measuring time
@@ -200,17 +236,17 @@ int main() {
 		//conv2_out_threaded = *conv2_struct->output;
 		
 		//printf("conv2out: %f\n", conv2_out[0][0][0]);
-		printf("conv2out: %f\n", conv2_out_tiled[0][0][0]);
+		printf("conv2out: %f\n", conv2_out[0][0][0]);
 
 
 		vector<vector<vector<float> > > test2_inputs = intermediate_compare_reshape("/local/jupyter/cpre482x-lab1/Inference/Template_Visual_Studio/Test_Input0/layer_1_output.bin", 56, 56, 32);
 
 		// Comparison 
 		max_diff = 0;
-		for (k = 0; k < 32; ++k) {
+		for (i = 0; i < 56; ++i) {
 			for (f = 0; f < 56; ++f) {
-				for (i = 0; i < 56; ++i) {
-					curr_diff = fabs(test2_inputs[i][f][k] - conv2_out_tiled[i][f][k]);
+				for (k = 0; k < 32; ++k) {
+					curr_diff = fabs(test2_inputs[i][f][k] - conv2_out[i][f][k]);
 					if (curr_diff < epsilon) {
 						// The values are equal
 					}
@@ -241,7 +277,7 @@ int main() {
 
 		begin = std::chrono::high_resolution_clock::now(); // Start measuring time
 		
-		pooling_out1 = max_pooling_2D(conv2_out_tiled);
+		pooling_out1 = max_pooling_2D(conv2_out);
 
 		end = std::chrono::high_resolution_clock::now();	// End measuring time
 		elapsed = std::chrono::duration_cast<std::chrono::nanoseconds>(end-begin);
@@ -297,12 +333,14 @@ int main() {
 		conv3_struct->weights = &conv3_weights;
 		conv3_struct->bias = &conv3_biases;
 		conv3_struct->output = &conv3_out_threaded;
+
 		// Thread Handler Start
 		pthread_t threads_3[MAX_THREAD];
 		
 		for (t_i = 0; t_i < MAX_THREAD; t_i++) {
 			pthread_create(&threads_3[t_i], NULL, ofmap_gen_conv_threaded, (void *)conv3_struct);
 		}
+
 		for (t_i = 0; t_i < MAX_THREAD; t_i++) {
 			pthread_join(threads_3[t_i], NULL);
 		}
@@ -371,11 +409,14 @@ int main() {
 		conv4_struct->weights = &conv4_weights;
 		conv4_struct->bias = &conv4_biases;
 		conv4_struct->output = &conv4_out_threaded;
+
 		// Thread Handler Start
 		pthread_t threads_4[MAX_THREAD];
+
 		for (t_i = 0; t_i < MAX_THREAD; t_i++) {
 			pthread_create(&threads_4[t_i], NULL, ofmap_gen_conv_threaded, (void *)conv4_struct);
 		}
+
 		for (t_i = 0; t_i < MAX_THREAD; t_i++) {
 			pthread_join(threads_4[t_i], NULL);
 		}
@@ -487,11 +528,14 @@ int main() {
 		conv5_struct->weights = &conv5_weights;
 		conv5_struct->bias = &conv5_biases;
 		conv5_struct->output = &conv5_out_threaded;
+
 		pthread_t threads_5[MAX_THREAD];
+
 		t_i = 0;
 		for (t_i = 0; t_i < MAX_THREAD; t_i++) {
 			pthread_create(&threads_5[t_i], NULL, ofmap_gen_conv_threaded, (void *)conv5_struct);
 		}
+
 		for (t_i = 0; t_i < MAX_THREAD; t_i++) {
 			pthread_join(threads_5[t_i], NULL);
 		}
@@ -565,9 +609,11 @@ int main() {
 		conv6_struct->output = &conv6_out_threaded;	
 		
 		pthread_t threads_6[MAX_THREAD];
+
 		for (t_i = 0; t_i < MAX_THREAD; t_i++) {
 			pthread_create(&threads_6[t_i], NULL, ofmap_gen_conv_threaded, (void *)conv6_struct);
 		}
+
 		for (t_i = 0; t_i < MAX_THREAD; t_i++) {
 			pthread_join(threads_6[t_i], NULL);
 		}
@@ -795,67 +841,47 @@ int main() {
 	return 0;
 }
 
-// Function for taking convolutional of Layer 2 with different tiling sizes.
-vector<vector<vector<float> > > ofmap_gen_conv2_tiling(const vector<vector<vector<float> > >& input_fmap, const vector<vector<vector<vector<float> > > >& weights, const vector<float>& bias, int t_block_size) {
+vector<vector<vector<float> > > ofmap_gen_conv2_tiling(const vector<vector<vector<float> > >& input_fmap, const vector<vector<vector<vector<float> > > >& weights, const vector<float>& bias) {
 	int x = 0;
-	int xx = 0;
 	int y = 0;
 	int z = 0;
-	int zz = 0;
 	int filter = 0;
 	int a = 0;
 	int b = 0;
+	int c = 0;
 	int filter_length = (int)weights.size();
 	int filter_height = (int)weights[0].size();
 	int filter_channel = (int)weights[0][0].size();
-	int num_filters = (int)weights[0][0][0].size();
-	int ifmap_length = (int)input_fmap.size();
+	int filter_num = (int)weights[0][0][0].size();
+	int ifmap_lenght = (int)input_fmap.size();
 	int ifmap_height = (int)input_fmap[0].size();
 	int ifmap_channel = (int)input_fmap[0][0].size();
-	float sum[56] = {0};
-	int sum_block = 0;
+	float sum = 0;
 
-	vector<vector<vector<float> > > output((ifmap_length - filter_length) + 1, vector<vector<float> >((ifmap_height - filter_height) + 1, vector<float>(num_filters, 0)));
+	//printf("Output map height: %d\n", ifmap_height - filter_height);
 
-	int block_const;
-	if (t_block_size == 2 || t_block_size == 4 || t_block_size == 8) {
-		block_const = 1;
-	} else if (t_block_size == 16 || t_block_size == 32) {
-		block_const = 9;
-	}
-	//printf("block:%d\n", block_const);
-	//Variables for Summing/Accumulation
-	for(filter = 0; filter<num_filters; ++filter) { //Loop through number of filters
-		for(y = 0; y<(ifmap_length - filter_length) + 1; ++y) { //Loop throgh heigth of ifmap
-			for(x=0; x< (ifmap_height - filter_height) + 1; x+=t_block_size) {
-				for(z=0; z<ifmap_channel; z+= t_block_size) {
-					for(xx=x; xx<x+t_block_size && xx<(ifmap_height - filter_height + 1); ++xx) {
-						for(zz=z; zz<z+t_block_size && zz<ifmap_channel; ++zz) {
-							for(a=0; a<filter_height; ++a) {
-								for(b=0; b<filter_length; ++b) {
-									sum[xx] += input_fmap[xx + b][y + a][zz] * weights[b][a][zz][filter];
-								}
-							}
+	vector<vector<vector<float> > > output((ifmap_lenght - filter_length) + 1, vector<vector<float> >((ifmap_height - filter_height) + 1, vector<float>(filter_num, 0)));
+	//vector<vector<vector<float> > > fmap_3d_section(filter_length, vector<vector<float> >(filter_height, vector<float>(filter_channel, 0)));
+
+	for (filter = 0; filter < filter_num; filter++) {											/* # of filters and # of output channels */
+		for (x = 0; x <= ifmap_lenght - filter_length; x++) {									/* length of output */
+			for (y = 0; y <= ifmap_height - filter_height; y++) {								/* height of output */
+				for (z = 0; z < ifmap_channel; z++) {											/* input channel */
+					for (a = 0; a < filter_length; a++) {										/* filter length */
+						for (b = 0; b < filter_height; b++) {									/* filter height */
+							sum += input_fmap[x + a][y + b][z] * weights[a][b][z][filter];		/* MultSum Accumulation */
 						}
 					}
 				}
-				if(x == ifmap_length - filter_length - t_block_size + block_const) {
-					int temp = 0;
-					for(temp = 0; temp < ifmap_length - filter_length+1; ++temp) {
-						output[temp][y][filter] = sum[temp] + bias[filter];
-						sum[temp] = 0;
+				output[x][y][filter] = sum + bias[filter];
+				sum = 0;
 
-						/* ReLU */
-						if (output[temp][y][filter] < 0) {
-							output[temp][y][filter] = 0;
-						}
-					}
-					
-				} 
-			} 
-			
+				/* ReLU */
+				if (output[x][y][filter] < 0) {
+					output[x][y][filter] = 0;
+				}
+			}
 		}
-	
 	}
 	return output;
 }
@@ -1044,13 +1070,14 @@ vector<vector<vector<vector<float> > > > conv_weights(const char* filename, cons
 	return reshaped_weights;
 }
 
-//Import weights from binary file (1D) and shape into matrix for tiling purposes
-vector<vector<float> > conv_weights_tiling(const char* filename, const int x, const int y, const int z, const int w) {
+/*
+//Import weights from binary file (1D) and shape into 4D vector.
+vector<vector<vector<vector<float> > > > conv_weights_tiling(const char* filename, const int x, const int y, const int z, const int w) {
 
-	/* Weights Data */
+	// Weights Data
 	int temp = x * y * z * w;
 	float conv_weights[temp]; // reshape back to x*y*z*w
-	vector<vector<float> > reshaped_weights(x*y*z, vector<float> (w, 0));
+	vector<vector<vector<vector<float> > > > reshaped_weights(x, vector<vector<vector<float> > >(y, vector<vector<float> >(z, vector<float>(w, 0))));
 	FILE* ptr_weights = fopen(filename, "rb");  // r for read, b for binary
 	int r2 = fread(conv_weights, sizeof(float), x * y * z * w, ptr_weights);
 	printf("Read weights: %d\n", r2);
@@ -1062,13 +1089,14 @@ vector<vector<float> > conv_weights_tiling(const char* filename, const int x, co
 
 	for (i = 0; i < x*y*z; i++) {
 		for (j = 0; j < w; j++) {
-			reshaped_weights[i][j] = conv_weights[count];
+			reshaped_weights[i][j] = conv1_weights[count];
 			count++;
 		}
 	}
 
 	return reshaped_weights;
 }
+*/
 
 /*
 Import weights from binary file (1D) and shape into 2D vector for the dense layer

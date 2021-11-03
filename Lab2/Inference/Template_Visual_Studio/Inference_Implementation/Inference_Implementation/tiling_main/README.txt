@@ -92,3 +92,26 @@ pooling3 = 0s
 flat = 0s
 dense1 = .016s
 dense2 = .002s
+
+3.6.2
+100 iterations w/o tiling: 9m 10.869s
+100 iterations w/tiling block size = 2: 4m 27.374s
+100 iterations w/tiling block size = 4: 4m 19.695s
+100 iterations w/tiling block size = 8: 4m 20.465s
+100 iterations w/tiling block size = 16: 4m 31.558s
+100 iterations w/tiling block size = 32: 4m 25.815s
+
+3.7.1
+Memory size needed to store TinyImageNet:
+fp32 weights/biases: 3.08 MB
+int8 weights/biases: 770.216 KB
+int2 weights/biases: 192.554 KB
+
+Total weights & biases: 770216
+Total inputs: 361416
+Total: 1131632
+
+Given 1MB of memory, we can fit the entire TinyImageNet if we quantize all parameters to a max of 8 bits.
+On top of storing weighs and biases we also need to store the first input activation and the last output activation. All others should already be in memory.
+
+3.7.2
