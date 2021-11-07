@@ -53,13 +53,32 @@ vector<vector<vector<uint8_t> > > image_import_uint8(const char* fileName);
 vector<int32_t> get_biases_int32(const char* filename, int x);
 vector<vector<vector<int32_t> > > ofmap_gen_conv_int32(const vector<vector<vector<uint8_t> > >& input_fmap, const vector<vector<vector<vector<int8_t> > > >& weights, const vector<int32_t>& bias);
 float find_maximum(vector<float> &original);
+float find_maximum_3d(vector<vector<vector<float> > > &original);
 vector<float> find_abs(vector<float> &original);
+vector<vector<vector<float> > > find_abs_3d(vector<vector<vector<float> > > &original);
 void compute_scale_biases(int layer_num);
+float dequantize_element(int32_t &element);
 
-// Scale Vectors
+// Scale Vectors (6 CONV layers, 2 DENSE layers)
 vector<float> scale_weights(8 , 0);
 vector<float> scale_input(8, 0);
 vector<float> scale_biases(8, 0);
+
+// Dequantize Vectors (6 CONV layers, 2 DENSE layers)
+vector<vector<vector<float> > > dequantized_conv1(60, vector<vector<float> >(60, vector<float>(32, 0))); // CONV 1
+vector<vector<vector<float> > > dequantized_conv2(56, vector<vector<float> >(56, vector<float>(32, 0))); // CONV 2
+vector<vector<vector<float> > > dequantized_conv3(26, vector<vector<float> >(26, vector<float>(64, 0))); // CONV 3
+vector<vector<vector<float> > > dequantized_conv4(24, vector<vector<float> >(24, vector<float>(64, 0))); // CONV 4
+vector<vector<vector<float> > > dequantized_conv5(10, vector<vector<float> >(10, vector<float>(64, 0))); // CONV 5
+vector<vector<vector<float> > > dequantized_conv6(8, vector<vector<float> >(8, vector<float>(128, 0)));  // CONV 6
+
+// Next Layer Input Vectors (6 CONV layers, 2 DENSE layers)
+vector<vector<vector<uint8_t> > > conv1_out_uint8(60, vector<vector<uint8_t> >(60, vector<uint8_t>(32, 0))); // CONV 1
+vector<vector<vector<uint8_t> > > conv2_out_uint8(56, vector<vector<uint8_t> >(56, vector<uint8_t>(32, 0))); // CONV 2
+vector<vector<vector<uint8_t> > > conv3_out_uint8(26, vector<vector<uint8_t> >(26, vector<uint8_t>(64, 0))); // CONV 3
+vector<vector<vector<uint8_t> > > conv4_out_uint8(24, vector<vector<uint8_t> >(24, vector<uint8_t>(64, 0))); // CONV 4
+vector<vector<vector<uint8_t> > > conv5_out_uint8(10, vector<vector<uint8_t> >(10, vector<uint8_t>(64, 0))); // CONV 5
+vector<vector<vector<uint8_t> > > conv6_out_uint8(8, vector<vector<uint8_t> >(8, vector<uint8_t>(128, 0)));  // CONV 6
 
 struct conv_layer {
 	
@@ -81,6 +100,25 @@ float find_maximum(vector<float> &original) {
 	return maximum;
 }
 
+// Helper function: Finds maximum element within 3D vector.
+float find_maximum_3d(vector<vector<vector<float> > > &original) {
+	int i, f, j;
+	int length = (int) original.size();
+	int height = (int) original[0].size();
+	int channels = (int) original[0][0].size();
+	float maximum = original[0][0][0];
+	for (i = 0; i < length; i++) {
+		for (f = 0; f < height; f++) {
+			for (j = 0; j < channels; j++) {
+				if (original[i][f][j] > maximum) {
+					maximum = original[i][f][j];
+				}
+			}
+		}
+	}
+	return maximum;
+}
+
 // Helper function: Takes 1D vector and performs abs on each element.
 vector<float> find_abs(float *original, int size) {
 	int i;
@@ -92,8 +130,156 @@ vector<float> find_abs(float *original, int size) {
 	return output;
 }
 
+// Helper function: Takes 3D vector and performs abs on each element.
+vector<vector<vector<float> > > find_abs_3d(vector<vector<vector<float> > > &original) {
+	int i, f, j;
+	int length = (int) original.size();
+	int height = (int) original[0].size();
+	int channels = (int) original[0][0].size();
+	vector<vector<vector<float> > > output(length, vector<vector<float> >(height, vector<float>(channels, 0)));
+
+	for (i = 0; i < length; i++) {
+		for (f = 0; f < height; f++) {
+			for (j = 0; j < channels; j++) {
+				output[i][f][j] = fabs(original[i][f][j]);
+			}
+		}
+	}
+	return output;
+}
+
 void compute_scale_biases(int layer_num) {
 	scale_biases[layer_num] = (scale_input[layer_num] * scale_weights[layer_num]);
+}
+
+float dequantize_element(int32_t &element) {
+	return (element / scale_biases[layer_count]);
+}
+
+vector<vector<vector<uint8_t> > > next_conv_uint8_input() {
+	float max;
+	int i, f, j;
+	switch(layer_count) {
+		case 0:
+			int length = (int) dequantized_conv1.size();
+			int height = (int) dequantized_conv1[0].size();
+			int channels = (int) dequantized_conv1[0][0].size();
+
+			max = find_maximum_3d(find_abs_3d(dequantized_conv1));
+			scale_input[layer_count] = (255 / max);
+
+			vector<vector<vector<uint8_t> > > output(length, vector<vector<uint8_t> >(height, vector<uint8_t>(channels, 0)));
+			for (i = 0; i < length; i++) {
+				for (f = 0; f < height; f++) {
+					for (j = 0; j < channels; j++) {
+						output[i][f][j] = round(scale_input[layer_count] * dequantized_conv1[i][f][j]);
+					}
+				}
+			}
+			return output;
+
+			break; 
+		case 1:
+			int length = (int) dequantized_conv2.size();
+			int height = (int) dequantized_conv2[0].size();
+			int channels = (int) dequantized_conv2[0][0].size();
+
+			max = find_maximum_3d(find_abs_3d(dequantized_conv2));
+			scale_input[layer_count] = (255 / max);
+
+			vector<vector<vector<uint8_t> > > output(length, vector<vector<uint8_t> >(height, vector<uint8_t>(channels, 0)));
+			for (i = 0; i < length; i++) {
+				for (f = 0; f < height; f++) {
+					for (j = 0; j < channels; j++) {
+						output[i][f][j] = round(scale_input[layer_count] * dequantized_conv2[i][f][j]);
+					}
+				}
+			}
+			return output;
+
+			break;
+		case 2:
+			int length = (int) dequantized_conv3.size();
+			int height = (int) dequantized_conv3[0].size();
+			int channels = (int) dequantized_conv3[0][0].size();
+
+			max = find_maximum_3d(find_abs_3d(dequantized_conv3));
+			scale_input[layer_count] = (255 / max);
+
+			vector<vector<vector<uint8_t> > > output(length, vector<vector<uint8_t> >(height, vector<uint8_t>(channels, 0)));
+			for (i = 0; i < length; i++) {
+				for (f = 0; f < height; f++) {
+					for (j = 0; j < channels; j++) {
+						output[i][f][j] = round(scale_input[layer_count] * dequantized_conv3[i][f][j]);
+					}
+				}
+			}
+			return output;
+
+			break;
+		case 3:
+			int length = (int) dequantized_conv4.size();
+			int height = (int) dequantized_conv4[0].size();
+			int channels = (int) dequantized_conv4[0][0].size();
+
+			max = find_maximum_3d(find_abs_3d(dequantized_conv4));
+			scale_input[layer_count] = (255 / max);
+
+			vector<vector<vector<uint8_t> > > output(length, vector<vector<uint8_t> >(height, vector<uint8_t>(channels, 0)));
+			for (i = 0; i < length; i++) {
+				for (f = 0; f < height; f++) {
+					for (j = 0; j < channels; j++) {
+						output[i][f][j] = round(scale_input[layer_count] * dequantized_conv4[i][f][j]);
+					}
+				}
+			}
+			return output;
+
+			break;
+		case 4:
+			int length = (int) dequantized_conv5.size();
+			int height = (int) dequantized_conv5[0].size();
+			int channels = (int) dequantized_conv5[0][0].size();
+
+			max = find_maximum_3d(find_abs_3d(dequantized_conv5));
+			scale_input[layer_count] = (255 / max);
+
+			vector<vector<vector<uint8_t> > > output(length, vector<vector<uint8_t> >(height, vector<uint8_t>(channels, 0)));
+			for (i = 0; i < length; i++) {
+				for (f = 0; f < height; f++) {
+					for (j = 0; j < channels; j++) {
+						output[i][f][j] = round(scale_input[layer_count] * dequantized_conv5[i][f][j]);
+					}
+				}
+			}
+			return output;
+
+			break;
+		case 5:
+			int length = (int) dequantized_conv6.size();
+			int height = (int) dequantized_conv6[0].size();
+			int channels = (int) dequantized_conv6[0][0].size();
+
+			max = find_maximum_3d(find_abs_3d(dequantized_conv6));
+			scale_input[layer_count] = (255 / max);
+
+			vector<vector<vector<uint8_t> > > output(length, vector<vector<uint8_t> >(height, vector<uint8_t>(channels, 0)));
+			for (i = 0; i < length; i++) {
+				for (f = 0; f < height; f++) {
+					for (j = 0; j < channels; j++) {
+						output[i][f][j] = round(scale_input[layer_count] * dequantized_conv6[i][f][j]);
+					}
+				}
+			}
+			return output;
+
+			break;
+		default:
+			printf("Error in next_conv_uint8_input function case selection.\n");
+			break;
+	}
+	
+	
 }
 
 int main() {  
@@ -154,10 +340,11 @@ int main() {
 		auto elapsed = std::chrono::duration_cast<std::chrono::nanoseconds>(end-begin);
 
 		printf("conv1out: %" PRId32 "\n", conv1_out[0][0][0]);
-		printf("Layer %d: scale_weights = %f\n", layer_count, scale_weights[layer_count]);
-		printf("Layer %d: scale_input = %f\n", layer_count, scale_input[layer_count]);
-		printf("Layer %d: scale_biases = %f\n", layer_count, scale_biases[layer_count]);
+		
 		if (debug_flag == 2) {
+			printf("Layer %d: scale_weights = %f\n", layer_count, scale_weights[layer_count]);
+			printf("Layer %d: scale_input = %f\n", layer_count, scale_input[layer_count]);
+			printf("Layer %d: scale_biases = %f\n", layer_count, scale_biases[layer_count]);
 			int i, j, k;
 			for (i = 0; i < 60; i++) {
 				for (j = 0; j < 60; j++) {
@@ -1044,6 +1231,31 @@ vector<vector<vector<int32_t> > > ofmap_gen_conv_int32(const vector<vector<vecto
 				if (output[x][y][filter] < 0) {
 					output[x][y][filter] = 0;
 				}
+
+				switch(layer_count) {
+					case 0:
+						dequantized_conv1[x][y][filter] = dequantize_element(output[x][y][filter]);
+						break;
+					case 1:
+						dequantized_conv2[x][y][filter] = dequantize_element(output[x][y][filter]);
+						break;
+					case 2:
+						dequantized_conv3[x][y][filter] = dequantize_element(output[x][y][filter]);
+						break;
+					case 3:
+						dequantized_conv4[x][y][filter] = dequantize_element(output[x][y][filter]);
+						break;
+					case 4:
+						dequantized_conv5[x][y][filter] = dequantize_element(output[x][y][filter]);
+						break;
+					case 5:
+						dequantized_conv6[x][y][filter] = dequantize_element(output[x][y][filter]);
+						break;
+					default:
+						break;
+				}
+				
+
 			}
 		}
 	}
@@ -1129,7 +1341,7 @@ vector<vector<vector<vector<int8_t> > > > conv_weights_int8(const char* filename
 	vector<float> abs_conv1_weights = find_abs(conv1_weights, temp);
 	float max = find_maximum(abs_conv1_weights);
 	if (debug_flag == 1) {
-		printf("MAX for Conv %d Layer: %f", layer_count + 1, max);
+		printf("MAX for Conv %d Layer: %f\n", layer_count + 1, max);
 	}
 	scale_weights[layer_count] = (127 / max);
 
