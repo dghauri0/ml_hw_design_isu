@@ -52,6 +52,7 @@ vector<vector<vector<vector<int8_t> > > > conv_weights_int8(const char* filename
 vector<vector<vector<uint8_t> > > image_import_uint8(const char* fileName);
 vector<int32_t> get_biases_int32(const char* filename, int x);
 vector<vector<vector<int32_t> > > ofmap_gen_conv_int32(const vector<vector<vector<uint8_t> > >& input_fmap, const vector<vector<vector<vector<int8_t> > > >& weights, const vector<int32_t>& bias);
+vector<vector<vector<uint8_t> > > next_conv_uint8_input(vector<vector<vector<float> > > &input);
 float find_maximum(vector<float> &original);
 float find_maximum_3d(vector<vector<vector<float> > > &original);
 vector<float> find_abs(vector<float> &original);
@@ -71,14 +72,6 @@ vector<vector<vector<float> > > dequantized_conv3(26, vector<vector<float> >(26,
 vector<vector<vector<float> > > dequantized_conv4(24, vector<vector<float> >(24, vector<float>(64, 0))); // CONV 4
 vector<vector<vector<float> > > dequantized_conv5(10, vector<vector<float> >(10, vector<float>(64, 0))); // CONV 5
 vector<vector<vector<float> > > dequantized_conv6(8, vector<vector<float> >(8, vector<float>(128, 0)));  // CONV 6
-
-// Next Layer Input Vectors (6 CONV layers, 2 DENSE layers)
-vector<vector<vector<uint8_t> > > conv1_out_uint8(60, vector<vector<uint8_t> >(60, vector<uint8_t>(32, 0))); // CONV 1
-vector<vector<vector<uint8_t> > > conv2_out_uint8(56, vector<vector<uint8_t> >(56, vector<uint8_t>(32, 0))); // CONV 2
-vector<vector<vector<uint8_t> > > conv3_out_uint8(26, vector<vector<uint8_t> >(26, vector<uint8_t>(64, 0))); // CONV 3
-vector<vector<vector<uint8_t> > > conv4_out_uint8(24, vector<vector<uint8_t> >(24, vector<uint8_t>(64, 0))); // CONV 4
-vector<vector<vector<uint8_t> > > conv5_out_uint8(10, vector<vector<uint8_t> >(10, vector<uint8_t>(64, 0))); // CONV 5
-vector<vector<vector<uint8_t> > > conv6_out_uint8(8, vector<vector<uint8_t> >(8, vector<uint8_t>(128, 0)));  // CONV 6
 
 struct conv_layer {
 	
@@ -156,130 +149,27 @@ float dequantize_element(int32_t &element) {
 	return (element / scale_biases[layer_count]);
 }
 
-vector<vector<vector<uint8_t> > > next_conv_uint8_input() {
+vector<vector<vector<uint8_t> > > next_conv_uint8_input(vector<vector<vector<float> > > &input) {
 	float max;
 	int i, f, j;
-	switch(layer_count) {
-		case 0:
-			int length = (int) dequantized_conv1.size();
-			int height = (int) dequantized_conv1[0].size();
-			int channels = (int) dequantized_conv1[0][0].size();
+	int length = (int) input.size();
+	int height = (int) input[0].size();
+	int channels = (int) input[0][0].size();
 
-			max = find_maximum_3d(find_abs_3d(dequantized_conv1));
-			scale_input[layer_count] = (255 / max);
+	vector<vector<vector<float> > > abs_conv(length, vector<vector<float> >(height, vector<float>(channels, 0)));
+	abs_conv = find_abs_3d(input);
+	max = find_maximum_3d(abs_conv);
+	scale_input[layer_count] = (255 / max);
 
-			vector<vector<vector<uint8_t> > > output(length, vector<vector<uint8_t> >(height, vector<uint8_t>(channels, 0)));
-			for (i = 0; i < length; i++) {
-				for (f = 0; f < height; f++) {
-					for (j = 0; j < channels; j++) {
-						output[i][f][j] = round(scale_input[layer_count] * dequantized_conv1[i][f][j]);
-					}
-				}
+	vector<vector<vector<uint8_t> > > output(length, vector<vector<uint8_t> >(height, vector<uint8_t>(channels, 0)));
+	for (i = 0; i < length; i++) {
+		for (f = 0; f < height; f++) {
+			for (j = 0; j < channels; j++) {
+				output[i][f][j] = round(scale_input[layer_count] * input[i][f][j]);
 			}
-			return output;
-
-			break; 
-		case 1:
-			int length = (int) dequantized_conv2.size();
-			int height = (int) dequantized_conv2[0].size();
-			int channels = (int) dequantized_conv2[0][0].size();
-
-			max = find_maximum_3d(find_abs_3d(dequantized_conv2));
-			scale_input[layer_count] = (255 / max);
-
-			vector<vector<vector<uint8_t> > > output(length, vector<vector<uint8_t> >(height, vector<uint8_t>(channels, 0)));
-			for (i = 0; i < length; i++) {
-				for (f = 0; f < height; f++) {
-					for (j = 0; j < channels; j++) {
-						output[i][f][j] = round(scale_input[layer_count] * dequantized_conv2[i][f][j]);
-					}
-				}
-			}
-			return output;
-
-			break;
-		case 2:
-			int length = (int) dequantized_conv3.size();
-			int height = (int) dequantized_conv3[0].size();
-			int channels = (int) dequantized_conv3[0][0].size();
-
-			max = find_maximum_3d(find_abs_3d(dequantized_conv3));
-			scale_input[layer_count] = (255 / max);
-
-			vector<vector<vector<uint8_t> > > output(length, vector<vector<uint8_t> >(height, vector<uint8_t>(channels, 0)));
-			for (i = 0; i < length; i++) {
-				for (f = 0; f < height; f++) {
-					for (j = 0; j < channels; j++) {
-						output[i][f][j] = round(scale_input[layer_count] * dequantized_conv3[i][f][j]);
-					}
-				}
-			}
-			return output;
-
-			break;
-		case 3:
-			int length = (int) dequantized_conv4.size();
-			int height = (int) dequantized_conv4[0].size();
-			int channels = (int) dequantized_conv4[0][0].size();
-
-			max = find_maximum_3d(find_abs_3d(dequantized_conv4));
-			scale_input[layer_count] = (255 / max);
-
-			vector<vector<vector<uint8_t> > > output(length, vector<vector<uint8_t> >(height, vector<uint8_t>(channels, 0)));
-			for (i = 0; i < length; i++) {
-				for (f = 0; f < height; f++) {
-					for (j = 0; j < channels; j++) {
-						output[i][f][j] = round(scale_input[layer_count] * dequantized_conv4[i][f][j]);
-					}
-				}
-			}
-			return output;
-
-			break;
-		case 4:
-			int length = (int) dequantized_conv5.size();
-			int height = (int) dequantized_conv5[0].size();
-			int channels = (int) dequantized_conv5[0][0].size();
-
-			max = find_maximum_3d(find_abs_3d(dequantized_conv5));
-			scale_input[layer_count] = (255 / max);
-
-			vector<vector<vector<uint8_t> > > output(length, vector<vector<uint8_t> >(height, vector<uint8_t>(channels, 0)));
-			for (i = 0; i < length; i++) {
-				for (f = 0; f < height; f++) {
-					for (j = 0; j < channels; j++) {
-						output[i][f][j] = round(scale_input[layer_count] * dequantized_conv5[i][f][j]);
-					}
-				}
-			}
-			return output;
-
-			break;
-		case 5:
-			int length = (int) dequantized_conv6.size();
-			int height = (int) dequantized_conv6[0].size();
-			int channels = (int) dequantized_conv6[0][0].size();
-
-			max = find_maximum_3d(find_abs_3d(dequantized_conv6));
-			scale_input[layer_count] = (255 / max);
-
-			vector<vector<vector<uint8_t> > > output(length, vector<vector<uint8_t> >(height, vector<uint8_t>(channels, 0)));
-			for (i = 0; i < length; i++) {
-				for (f = 0; f < height; f++) {
-					for (j = 0; j < channels; j++) {
-						output[i][f][j] = round(scale_input[layer_count] * dequantized_conv6[i][f][j]);
-					}
-				}
-			}
-			return output;
-
-			break;
-		default:
-			printf("Error in next_conv_uint8_input function case selection.\n");
-			break;
+		}
 	}
-	
-	
+	return output;	
 }
 
 int main() {  
@@ -300,6 +190,7 @@ int main() {
 		vector<vector<vector<vector<int8_t> > > > conv1_weights(5, vector<vector<vector<int8_t> > >(5, vector<vector<int8_t> >(3, vector<int8_t>(32, 0))));
 		vector<int32_t> conv1_biases(32, 0);
 		vector<vector<vector<int32_t> > > conv1_out(60, vector<vector<int32_t> >(60, vector<int32_t>(32, 0)));
+		vector<vector<vector<uint8_t> > > conv1_out_uint8(60, vector<vector<uint8_t> >(60, vector<uint8_t>(32, 0)));
 		//vector<vector<vector<float> > > conv1_out_threaded(60, vector<vector<float> >(60, vector<float>(32, 0)));
 
 
@@ -320,21 +211,8 @@ int main() {
 
 		// First Convolutional Layer Output
 		conv1_out = ofmap_gen_conv_int32(conv1_image, conv1_weights, conv1_biases);
+		conv1_out_uint8 = next_conv_uint8_input(dequantized_conv1);
 
-		/*
-		// Thread Handler Start
-		pthread_t threads_1[MAX_THREAD];
-		int t_i = 0;
-		for (t_i = 0; t_i < MAX_THREAD; t_i++) {
-			pthread_create(&threads_1[t_i], NULL, ofmap_gen_conv_threaded, (void *)conv1_struct);
-		}
-		for (t_i = 0; t_i < MAX_THREAD; t_i++) {
-			pthread_join(threads_1[t_i], NULL);
-		}
-		// Thread Handler End 
-		
-		conv1_out_threaded = *conv1_struct->output;
-		*/
 		
 		auto end = std::chrono::high_resolution_clock::now();	// End measuring time
 		auto elapsed = std::chrono::duration_cast<std::chrono::nanoseconds>(end-begin);
