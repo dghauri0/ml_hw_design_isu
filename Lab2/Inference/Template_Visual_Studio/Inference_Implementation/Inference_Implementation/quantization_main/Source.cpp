@@ -199,9 +199,10 @@ int main() {
 
 		auto begin = std::chrono::high_resolution_clock::now(); // Start measuring time
 
+		printf("Layer count is: %d.\n", layer_count);
 		conv1_image = image_import_uint8("/local/jupyter/cpre482x-lab1/Inference/Template_Visual_Studio/Test_Input0/input.bin");
 		conv1_weights = conv_weights_int8("/local/jupyter/cpre482x-lab1/Inference/Template_Visual_Studio/Test_Input0/conv1_weights.bin", 5, 5, 3, 32);
-		compute_scale_biases(layer_count);
+		compute_scale_biases(layer_count); // important. do in this order.
 		conv1_biases = get_biases_int32("/local/jupyter/cpre482x-lab1/Inference/Template_Visual_Studio/Test_Input0/conv1_biases.bin", 32);
 
 		//conv1_struct->fmap = &conv1_image;
@@ -211,13 +212,17 @@ int main() {
 
 		// First Convolutional Layer Output
 		conv1_out = ofmap_gen_conv_int32(conv1_image, conv1_weights, conv1_biases);
+		layer_count++; // important. do in this order.
 		conv1_out_uint8 = next_conv_uint8_input(dequantized_conv1);
+		
 
 		
 		auto end = std::chrono::high_resolution_clock::now();	// End measuring time
 		auto elapsed = std::chrono::duration_cast<std::chrono::nanoseconds>(end-begin);
 
-		printf("conv1out: %" PRId32 "\n", conv1_out[0][0][0]);
+		printf("conv1out (int32): %" PRId32 "\n", conv1_out[0][0][0]);
+		printf("conv1out (dequantized): %f\n", dequantized_conv1[0][0][0]);
+		printf("conv1out (uint8): %" PRIu8 "\n", conv1_out_uint8[0][0][0]);
 		
 		if (debug_flag == 2) {
 			printf("Layer %d: scale_weights = %f\n", layer_count, scale_weights[layer_count]);
@@ -241,7 +246,7 @@ int main() {
 		//	pthread_exit();
 		//}
 		
-		/*
+		
 		vector<vector<vector<float> > > test1_inputs = intermediate_compare_reshape("/local/jupyter/cpre482x-lab1/Inference/Template_Visual_Studio/Test_Input0/layer_0_output.bin", 60, 60, 32);
 
 		// Comparison
@@ -256,13 +261,13 @@ int main() {
 		for (i = 0; i < 60; ++i) {
 			for (f = 0; f < 60; ++f) {
 				for (k = 0; k < 32; ++k) {
-					curr_diff = fabs(test1_inputs[i][f][k] - conv1_out[i][f][k]);
+					curr_diff = fabs(test1_inputs[i][f][k] - dequantized_conv1[i][f][k]);
 					if (curr_diff < epsilon) {
 						// The values are equal
 					}
 					else {
 						// The values are different
-						printf("%d, %d, %d\n", i, f, k);
+						//printf("%d, %d, %d\n", i, f, k);
 					}
 					if (curr_diff > max_diff) {
 						max_diff = curr_diff;
@@ -276,9 +281,8 @@ int main() {
 		time_sum += temp_time;
 		printf("conv1time: %.3f seconds.\n", temp_time);	// Report time.
 		part = 0;
-		*/
 		
-		/*
+		
 		//================================================================================================
 		//================================================================================================
 		//===============CONV2 Begin======================================================================
@@ -286,17 +290,20 @@ int main() {
 		//================================================================================================
 
 		
-		vector<vector<vector<vector<float> > > > conv2_weights(5, vector<vector<vector<float> > >(5, vector<vector<float> >(32, vector<float>(32, 0))));
-		vector<float> conv2_biases(32, 0);
-		//vector<vector<vector<float> > > conv2_out(56, vector<vector<float> >(56, vector<float>(32, 0)));
-		vector<vector<vector<float> > > conv2_out_tiled(56, vector<vector<float> >(56, vector<float>(32, 0)));
+		vector<vector<vector<vector<int8_t> > > > conv2_weights(5, vector<vector<vector<int8_t> > >(5, vector<vector<int8_t> >(32, vector<int8_t>(32, 0))));
+		vector<int32_t> conv2_biases(32, 0);
+		vector<vector<vector<int32_t> > > conv2_out(56, vector<vector<int32_t> >(56, vector<int32_t>(32, 0)));
+		vector<vector<vector<uint8_t> > > conv2_out_uint8(60, vector<vector<uint8_t> >(60, vector<uint8_t>(32, 0)));
+		//vector<vector<vector<float> > > conv2_out_tiled(56, vector<vector<float> >(56, vector<float>(32, 0)));
 
 		//struct conv_layer *conv2_struct = (struct conv_layer *) malloc (sizeof (struct conv_layer));
 
 		begin = std::chrono::high_resolution_clock::now(); // Start measuring time
 
-		conv2_weights = conv_weights("/local/jupyter/cpre482x-lab1/Inference/Template_Visual_Studio/Test_Input0/conv2_weights.bin", 5, 5, 32, 32);
-		conv2_biases = get_biases("/local/jupyter/cpre482x-lab1/Inference/Template_Visual_Studio/Test_Input0/conv2_biases.bin", 32);
+		printf("Layer count is: %d.\n", layer_count);
+		conv2_weights = conv_weights_int8("/local/jupyter/cpre482x-lab1/Inference/Template_Visual_Studio/Test_Input0/conv2_weights.bin", 5, 5, 32, 32);
+		compute_scale_biases(layer_count);
+		conv2_biases = get_biases_int32("/local/jupyter/cpre482x-lab1/Inference/Template_Visual_Studio/Test_Input0/conv2_biases.bin", 32);
 
 		//conv2_struct->fmap = &conv1_out_threaded;
 		//conv2_struct->weights = &conv2_weights;
@@ -305,8 +312,10 @@ int main() {
 
 		// Second Convlolutional Layer Output
 
-		conv2_out_tiled = ofmap_gen_conv2_tiling(conv1_out, conv2_weights, conv2_biases, 32);
-		
+		//conv2_out_tiled = ofmap_gen_conv2_tiling(conv1_out, conv2_weights, conv2_biases, 32);
+		conv2_out = ofmap_gen_conv_int32(conv1_out_uint8, conv2_weights, conv2_biases);
+		conv2_out_uint8 = next_conv_uint8_input(dequantized_conv2);
+		layer_count++;
 
 		end = std::chrono::high_resolution_clock::now();	// End measuring time
 		elapsed = std::chrono::duration_cast<std::chrono::nanoseconds>(end-begin);
@@ -314,9 +323,12 @@ int main() {
 		//conv2_out_threaded = *conv2_struct->output;
 		
 		//printf("conv2out: %f\n", conv2_out[0][0][0]);
-		printf("conv2out: %f\n", conv2_out_tiled[0][0][0]);
+		//printf("conv2out: %f\n", conv2_out_tiled[0][0][0]);
+		printf("conv2out (int32): %" PRId32 "\n", conv2_out[0][0][0]);
+		printf("conv2out (dequantized): %f\n", dequantized_conv2[0][0][0]);
+		printf("conv2out (uint8): %" PRIu8 "\n", conv2_out_uint8[0][0][0]);
 
-
+		
 		vector<vector<vector<float> > > test2_inputs = intermediate_compare_reshape("/local/jupyter/cpre482x-lab1/Inference/Template_Visual_Studio/Test_Input0/layer_1_output.bin", 56, 56, 32);
 
 		// Comparison 
@@ -324,13 +336,13 @@ int main() {
 		for (k = 0; k < 32; ++k) {
 			for (f = 0; f < 56; ++f) {
 				for (i = 0; i < 56; ++i) {
-					curr_diff = fabs(test2_inputs[i][f][k] - conv2_out_tiled[i][f][k]);
+					curr_diff = fabs(test2_inputs[i][f][k] - dequantized_conv2[i][f][k]);
 					if (curr_diff < epsilon) {
 						// The values are equal
 					}
 					else {
 						// The values are different
-						printf("%d, %d, %d\n", i, f, k);
+						//printf("%d, %d, %d\n", i, f, k);
 					}
 					if (curr_diff > max_diff) {
 						max_diff = curr_diff;
@@ -343,7 +355,8 @@ int main() {
 		time_sum += temp_time;
 		printf("conv2time: %.3f seconds.\n", temp_time);	// Report time.
 		part = 0;
-
+		
+		/*
 		//================================================================================================
 		//================================================================================================
 		//===============Max_Pooling1 Begin===============================================================
@@ -386,7 +399,7 @@ int main() {
 		time_sum += temp_time;
 		printf("pooling1time: %.3f seconds.\n", temp_time);	// Report time.
 
-
+		
 		//================================================================================================
 		//================================================================================================
 		//===============CONV3 Begin======================================================================
@@ -840,7 +853,6 @@ int main() {
 
 	printf("[Iteration: %d] [Time: %.3fs] Complete.\n\n", main_i, time_sum);
 	time_sum_total += time_sum;
-
 	*/
 	}
 	float average_time_total = time_sum_total / PROFILING_ITERATIONS;
