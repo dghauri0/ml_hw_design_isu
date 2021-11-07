@@ -17,7 +17,6 @@
 #include <pthread.h>
 #include <signal.h>
 #include <string.h>
-#include <limits>
 
 #define MAX_THREAD 2
 #define PROFILING_ITERATIONS 1
@@ -25,6 +24,7 @@
 using namespace std;
 
 int part = 0;
+int layer_count = 0;
 
 // Function Declaration
 vector<vector<vector<float> > > image_import(const char* fileName);
@@ -38,25 +38,25 @@ vector<float> get_biases(const char* filename, int x);
 vector<vector<vector<float> > > max_pooling_2D(vector<vector<vector<float> > > & ofmap_in);
 vector<float> softmax(vector<float> & input);
 
-// Quantization Specific Function Declarations
-float find_maximum(vector<float> &original);
-vector<float> find_abs(vector<float> &original);
-vector<uint8_t> uint8_input(vector<float> &input);
-vector<int8_t> int8_weights(vector<float> &weights);
-vector<int32_t> int32_biases(vector<vector<vector<float> > > &scaled_input, vector<float> &scaled_weights, vector<float> &biases);
-vector<float> scaled_biases_main(vector<vector<vector<float> > > &scaled_input, vector<float> &scaled_weights);
-vector<vector<vector<float> > > fp32_dequantize(vector<vector<vector<int32_t> > > &input, vector<float> &scaled_biases);
-vector<vector<vector<int32_t> > > ofmap_gen_conv_int32(const vector<vector<vector<uint8_t> > >& input_fmap, const vector<vector<vector<vector<int8_t> > > >& weights, const vector<int32_t>& bias);
-vector<int32_t> get_biases_int32(const char* filename, int x);
-vector<vector<vector<uint8_t> > > image_import_uint8(const char* fileName);
-vector<vector<vector<vector<int8_t> > > > conv_weights_int8(const char* filename, const int x, const int y, const int z, const int w);
-
 // Thread-Specific Output Map Gen Function
 void* ofmap_gen_conv_threaded(void *arg);
 
 // Tiling-Specific Output Map Gen Function
 vector<vector<vector<float> > > ofmap_gen_conv2_tiling(const vector<vector<vector<float> > >& input_fmap, const vector<vector<vector<vector<float> > > >& weights, const vector<float>& bias, int t_block_size);
 vector<vector<float> > conv_weights_tiling(const char* filename, const int x, const int y, const int z, const int w);
+
+// Quantization-Specific Functions
+vector<vector<vector<vector<int8_t> > > > conv_weights_int8(const char* filename, const int x, const int y, const int z, const int w);
+vector<vector<vector<uint8_t> > > image_import_uint8(const char* fileName);
+vector<int32_t> get_biases_int32(const char* filename, int x);
+float find_maximum(vector<float> &original);
+vector<float> find_abs(vector<float> &original);
+void compute_scale_biases(int layer_num);
+
+// Scale Vectors
+vector<float> scale_weights(8 , 0);
+vector<float> scale_input(8, 0);
+vector<float> scale_biases(8, 0);
 
 struct conv_layer {
 	
@@ -66,147 +66,30 @@ struct conv_layer {
 	vector<vector<vector<float> > > *output;
 };
 
-// Quantization functions
-
-float find_maximum(vector<vector<vector<float> > > &original) {
-	int x, y, z;
+// Helper function: Finds maximum element within 1D vector.
+float find_maximum(vector<float> &original) {
+	int i;
 	float maximum = numeric_limits<float>::min();
-	int length = (int) original.size();
-	int height = (int) original[0].size();
-	int channels = (int) original[0][0].size();
-	
-	for (x = 0; x < height; x++) {
-		for (y = 0; y < length; y++) {
-			for (z = 0; z < channels; z++) {
-				if (original[x][y][z] > maximum) {
-					maximum = original[x][y][z];
-				}
-			}
+	for (i = 0; i < original.size(); i++) {
+		if (original[i] > maximum) {
+			maximum = original[i];
 		}
 	}
 	return maximum;
 }
 
-vector<vector<vector<float> > > find_abs(vector<vector<vector<float> > > &original) {
-	int x, y, z;
-	int length = (int) original.size();
-	int height = (int) original[0].size();
-	int channels = (int) original[0][0].size();
-	vector<vector<vector<float> > > output(length, vector<vector<float> >(height, vector<float>(channels, 0)));
-	for(x = 0; x < height; x++) {
-		for(y = 0; y < length; y++) {
-			for(z = 0; z < channels; z++){
-				output[x][y][z] = abs(original[x][y][z]);
-			}
-		}
+// Helper function: Takes 1D vector and performs abs on each element.
+vector<float> find_abs(float *original, int size) {
+	int i;
+	vector<float> output(size, 0);
+	for (i = 0; i < size; i++) {
+		output[i] = abs(original[i]);
 	}
 	return output;
 }
 
-vector<vector<vector<uint8_t> > > uint8_input(vector<vector<vector<float> > > &input) {
-        int i;
-		int j;
-		int k;
-
-        int length = (int) input.size();
-		int height = (int) input[0].size();
-		int channels = (int) input[0][0].size();
-        vector<vector<vector<uint8_t> > > output(length, vector<vector<uint8_t> >(height, vector<uint8_t>(channels, 0)));
-
-		// Takes all input activations and makes same size absolute value vector
-		vector<vector<vector<float> > > abs = find_abs(input);
-
-		// Takes that absolute value vector and finds the maximum within it for normalization denominator
-		float max = find_maximum(abs);
-
-        for (i = 0; i < height; i++) {
-			for (j = 0; j < length; j++) {
-				for (k = 0; k < channels; k++) {
-					output[i][j][k] = round((255 / max) * input[i][j][k]);
-				}
-			}
-        }
-
-        return output;
-}
-
-vector<int8_t> int8_weights(vector<float> &weights) {
-        int i;
-        int size = (int) weights.size();
-        vector<int8_t> output(size, 0);
-
-		vector<float> abs = find_abs(weights);
-		float max = find_maximum(abs);
-
-        for (i = 0; i < size; i++) {
-                output[i] = round((127 / max) * weights[i]);
-        }
-
-        return output;
-}
-
-vector<int32_t> int32_biases(vector<vector<vector<float> > > &scaled_input, vector<float> &scaled_weights, vector<float> &biases) {
-       
-		int i = 0;
-
-		int size = (int) scaled_input.size();
-		int height = (int) scaled_input[0].size();
-		int channels = (int) scaled_input[0][0].size();
-
-		
-        vector<int32_t> output(size, 0);
-		vector<float> scaled_biases(size, 0);
-
-		scaled_biases = scaled_biases_main(scaled_input, scaled_weights);
-
-        for (i = 0; i < size*height*channels; i++) {
-            output[i] = round(scaled_biases[i] * biases[i]);	
-        }
-
-        return output;
-}
-
-vector<float> scaled_biases_main(vector<vector<vector<float> > > &scaled_input, vector<float> &scaled_weights) {
-	int i, x, y, z;
-	i = 0;
-	
-	int length = (int) scaled_input.size();
-	int height = (int) scaled_input[0].size();
-	int channels = (int) scaled_input[0][0].size();
-	vector<float> output(length*height*channels, 0);
-	for (x = 0; x < height; x++) {
-		for (y = 0; y < length; y++) {
-			for(z = 0; z < channels; z++) {
-				output[i] = scaled_input[x][y][z] * scaled_weights[i];
-				i++;
-			}
-		}
-	}
-	return output;
-}
-
-
-
-vector<vector<vector<float> > > fp32_dequantize(vector<vector<vector<int32_t> > > &input, vector<float> &scaled_biases) {
-	int length = input.size();
-	int height = input[0].size();
-	int channels = input[0][0].size();
-	
-	int x=0;
-	int y=0;
-	int z=0;
-
-	int i=0;
-	vector<vector<vector<float> > > output(length, vector<vector<float> >(height, vector<float>(channels, 0)));
-	for (x = 0; x < height; x++) {
-		for(y=0; y < length; y++) {
-			for(z=0; z < channels; z++) {
-				output[x][y][z] = input[x][y][z] / scaled_biases[i];
-				i++;
-			}
-		}
-	}
-	return output;
+void compute_scale_biases(int layer_num) {
+	scale_biases[layer_num] = (scale_input[layer_num] * scale_weights[layer_num]);
 }
 
 int main() {  
@@ -223,11 +106,10 @@ int main() {
 		//================================================================================================
 		//================================================================================================
 
-		vector<vector<vector<uint8_t> > > conv1_image_uint8(64, vector<vector<uint8_t> >(64, vector<uint8_t>(3, 0)));
-		vector<vector<vector<vector<int8_t> > > > conv1_weights_int8(5, vector<vector<vector<int8_t> > >(5, vector<vector<int8_t> >(3, vector<int8_t>(32, 0))));
-		vector<int32_t> conv1_biases_int32(32, 0);
-		vector<vector<vector<int32_t> > > conv1_out(60, vector<vector<int32_t> >(60, vector<int32_t>(32, 0)));
-		vector<vector<vector<float> > > conv1_out_float(60, vector<vector<float> >(60, vector<float>(32, 0)));
+		vector<vector<vector<uint8_t> > > conv1_image(64, vector<vector<uint8_t> >(64, vector<uint8_t>(3, 0)));
+		vector<vector<vector<vector<int8_t> > > > conv1_weights(5, vector<vector<vector<int8_t> > >(5, vector<vector<int8_t> >(3, vector<int8_t>(32, 0))));
+		vector<int32_t> conv1_biases(32, 0);
+		vector<vector<vector<float> > > conv1_out(60, vector<vector<float> >(60, vector<float>(32, 0)));
 		//vector<vector<vector<float> > > conv1_out_threaded(60, vector<vector<float> >(60, vector<float>(32, 0)));
 
 
@@ -236,17 +118,18 @@ int main() {
 
 		auto begin = std::chrono::high_resolution_clock::now(); // Start measuring time
 
-		conv1_image_uint8 = image_import_uint8("/local/jupyter/cpre482x-lab1/Inference/Template_Visual_Studio/Test_Input0/input.bin");
-		conv1_weights_int8 = conv_weights_int8("/local/jupyter/cpre482x-lab1/Inference/Template_Visual_Studio/Test_Input0/conv1_weights.bin", 5, 5, 3, 32);
-		conv1_biases_int32 = get_biases_int32("/local/jupyter/cpre482x-lab1/Inference/Template_Visual_Studio/Test_Input0/conv1_biases.bin", 32);
-		
+		conv1_image = image_import_uint8("/local/jupyter/cpre482x-lab1/Inference/Template_Visual_Studio/Test_Input0/input.bin");
+		conv1_weights = conv_weights_int8("/local/jupyter/cpre482x-lab1/Inference/Template_Visual_Studio/Test_Input0/conv1_weights.bin", 5, 5, 3, 32);
+		compute_scale_biases(layer_count);
+		conv1_biases = get_biases_int32("/local/jupyter/cpre482x-lab1/Inference/Template_Visual_Studio/Test_Input0/conv1_biases.bin", 32);
+
 		//conv1_struct->fmap = &conv1_image;
 		//conv1_struct->weights = &conv1_weights;
 		//conv1_struct->bias = &conv1_biases;
-		//conv1_struct->output = &conv1_out_threaded; 
+		//conv1_struct->output = &conv1_out_threaded;
 
 		// First Convolutional Layer Output
-		conv1_out = ofmap_gen_conv_int32(conv1_image_uint8, conv1_weights_int8, conv1_biases_int32);
+		conv1_out = ofmap_gen_conv(conv1_image, conv1_weights, conv1_biases);
 
 		/*
 		// Thread Handler Start
@@ -262,14 +145,11 @@ int main() {
 		
 		conv1_out_threaded = *conv1_struct->output;
 		*/
-
-		conv1_out_float = fp32_dequantize(conv1_out, scaled_biases_main(conv1_image_uint8, conv1_weights_int8));
-		//vector<float> fp32_dequantize(vector<vector<vector<int32_t> > > &input, vector<float> &scaled_biases);
 		
 		auto end = std::chrono::high_resolution_clock::now();	// End measuring time
 		auto elapsed = std::chrono::duration_cast<std::chrono::nanoseconds>(end-begin);
 
-		printf("conv1out: %f\n", conv1_out_float[0][0][0]);
+		printf("conv1out: %f\n", conv1_out[0][0][0]);
 		//printf("conv1out_threaded: %f\n", conv1_out_threaded[0][0][0]);
 
 		//for (t_i = 0; t_i < MAX_THREAD; t_i++) { 
@@ -290,7 +170,7 @@ int main() {
 		for (i = 0; i < 60; ++i) {
 			for (f = 0; f < 60; ++f) {
 				for (k = 0; k < 32; ++k) {
-					curr_diff = fabs(test1_inputs[i][f][k] - conv1_out_float[i][f][k]);
+					curr_diff = fabs(test1_inputs[i][f][k] - conv1_out[i][f][k]);
 					if (curr_diff < epsilon) {
 						// The values are equal
 					}
@@ -335,19 +215,6 @@ int main() {
 		//conv2_struct->weights = &conv2_weights;
 		//conv2_struct->bias = &conv2_biases;
 		//onv2_struct->output = &conv2_out_threaded;
-
-		// Thread Handler Start
-		//pthread_t threads_2[MAX_THREAD];
-
-		//for (t_i = 0; t_i < MAX_THREAD; t_i++) {
-		//	pthread_create(&threads_2[t_i], NULL, ofmap_gen_conv_threaded, (void *)conv2_struct);
-		//}
-		
-		//for (t_i = 0; t_i < MAX_THREAD; t_i++) {
-		//	//printf("%d\n", t_i);
-		//	pthread_join(threads_2[t_i], NULL);
-		//}
-		// Thread Handler End
 
 		// Second Convlolutional Layer Output
 
@@ -510,7 +377,6 @@ int main() {
 		conv4_weights = conv_weights("/local/jupyter/cpre482x-lab1/Inference/Template_Visual_Studio/Test_Input0/conv4_weights.bin", 3, 3, 64, 64);
 		conv4_biases = get_biases("/local/jupyter/cpre482x-lab1/Inference/Template_Visual_Studio/Test_Input0/conv4_biases.bin", 64);
 		
-	
 
 		// Fourth Convlolutional Layer Output 
 		conv4_out = ofmap_gen_conv(conv3_out, conv4_weights, conv4_biases);
@@ -672,7 +538,6 @@ int main() {
 
 		conv6_weights = conv_weights("/local/jupyter/cpre482x-lab1/Inference/Template_Visual_Studio/Test_Input0/conv6_weights.bin", 3, 3, 64, 128);
 		conv6_biases = get_biases("/local/jupyter/cpre482x-lab1/Inference/Template_Visual_Studio/Test_Input0/conv6_biases.bin", 128);
-	
 
 
 		// Sixth Convlolutional Layer Output 
@@ -888,12 +753,12 @@ int main() {
 
 	printf("[Iteration: %d] [Time: %.3fs] Complete.\n\n", main_i, time_sum);
 	time_sum_total += time_sum;
+
 	*/
 	}
 	float average_time_total = time_sum_total / PROFILING_ITERATIONS;
 	printf("Done - Final. [Average Time: %.3fs]\n", average_time_total);
 	return 0;
-	
 }
 
 // Function for taking convolutional of Layer 2 with different tiling sizes.
@@ -1039,15 +904,17 @@ vector<vector<vector<float> > > image_import(const char* fileName) {
 vector<vector<vector<uint8_t> > > image_import_uint8(const char* fileName) {
 
 	/* Input Data */
-	float conv1_inputs_float[12288]; // reshape back to x*y*z
+	float conv1_inputs[12288]; // reshape back to x*y*z
 	vector<vector<vector<uint8_t> > > reshaped_inputs(64, vector<vector<uint8_t> >(64, vector<uint8_t>(3, 0)));
 
 	FILE* ptr_input = fopen(fileName, "rb");  // r for read, b for binary
-	int r2 = fread(conv1_inputs_float, sizeof(float), 12288, ptr_input);
+	int r2 = fread(conv1_inputs, sizeof(float), 12288, ptr_input);
 	printf("Read images: %d\n", r2);
 	fclose(ptr_input);
 
-	uint8_t conv1_inputs_uint8[12288] = uint8_input(conv1_inputs_float);
+	vector<float> abs_conv1_inputs = find_abs(conv1_inputs, 12288);
+	float max = find_maximum(abs_conv1_inputs);
+	scale_input[layer_count] = (255 / max);
 
 	int i = 0;
 	int f = 0;
@@ -1057,7 +924,7 @@ vector<vector<vector<uint8_t> > > image_import_uint8(const char* fileName) {
 	for (i = 0; i < 64; i++) {
 		for (f = 0; f < 64; f++) {
 			for (j = 0; j < 3; j++) {
-				reshaped_inputs[i][f][j] = conv1_inputs_uint8[count];
+				reshaped_inputs[i][f][j] = round(scale_input[layer_count] * conv1_inputs[count]);
 				count++;
 			}
 		}
@@ -1069,52 +936,6 @@ vector<vector<vector<uint8_t> > > image_import_uint8(const char* fileName) {
 Generate
  */
 vector<vector<vector<float> > > ofmap_gen_conv(const vector<vector<vector<float> > >& input_fmap, const vector<vector<vector<vector<float> > > >& weights, const vector<float>& bias) {
-	int x = 0;
-	int y = 0;
-	int z = 0;
-	int filter = 0;
-	int a = 0;
-	int b = 0;
-	int c = 0;
-	int filter_length = (int)weights.size();
-	int filter_height = (int)weights[0].size();
-	int filter_channel = (int)weights[0][0].size();
-	int filter_num = (int)weights[0][0][0].size();
-	int ifmap_lenght = (int)input_fmap.size();
-	int ifmap_height = (int)input_fmap[0].size();
-	int ifmap_channel = (int)input_fmap[0][0].size();
-	float sum = 0;
-
-	//printf("Output map height: %d\n", ifmap_height - filter_height);
-
-	vector<vector<vector<float> > > output((ifmap_lenght - filter_length) + 1, vector<vector<float> >((ifmap_height - filter_height) + 1, vector<float>(filter_num, 0)));
-	//vector<vector<vector<float> > > fmap_3d_section(filter_length, vector<vector<float> >(filter_height, vector<float>(filter_channel, 0)));
-
-	for (filter = 0; filter < filter_num; filter++) {											/* # of filters and # of output channels */
-		for (x = 0; x <= ifmap_lenght - filter_length; x++) {									/* length of output */
-			for (y = 0; y <= ifmap_height - filter_height; y++) {								/* height of output */
-				for (z = 0; z < ifmap_channel; z++) {											/* input channel */
-					for (a = 0; a < filter_length; a++) {										/* filter length */
-						for (b = 0; b < filter_height; b++) {									/* filter height */
-							sum += input_fmap[x + a][y + b][z] * weights[a][b][z][filter];		/* MultSum Accumulation */
-						}
-					}
-				}
-				output[x][y][filter] = sum + bias[filter];
-				sum = 0;
-
-				/* ReLU */
-				if (output[x][y][filter] < 0) {
-					output[x][y][filter] = 0;
-				}
-			}
-		}
-	}
-	return output;
-}
-
-// Todo
-vector<vector<vector<int32_t> > > ofmap_gen_conv_int32(const vector<vector<vector<uint8_t> > >& input_fmap, const vector<vector<vector<vector<int8_t> > > >& weights, const vector<int32_t>& bias) {
 	int x = 0;
 	int y = 0;
 	int z = 0;
@@ -1193,12 +1014,14 @@ vector<vector<vector<vector<float> > > > conv_weights(const char* filename, cons
 
 	/* Weights Data */
 	int temp = x * y * z * w;
-	float conv1_weights_float[temp]; // reshape back to x*y*z*w
+	float conv1_weights[temp]; // reshape back to x*y*z*w
 	vector<vector<vector<vector<float> > > > reshaped_weights(x, vector<vector<vector<float> > >(y, vector<vector<float> >(z, vector<float>(w, 0))));
 	FILE* ptr_weights = fopen(filename, "rb");  // r for read, b for binary
 	int r2 = fread(conv1_weights, sizeof(float), x * y * z * w, ptr_weights);
 	printf("Read weights: %d\n", r2);
 	fclose(ptr_weights);
+
+
 
 	int i = 0;
 	int f = 0;
@@ -1227,15 +1050,16 @@ vector<vector<vector<vector<int8_t> > > > conv_weights_int8(const char* filename
 
 	/* Weights Data */
 	int temp = x * y * z * w;
-	float conv1_weights_float[temp]; // reshape back to x*y*z*w
-
+	float conv1_weights[temp]; // reshape back to x*y*z*w
 	vector<vector<vector<vector<int8_t> > > > reshaped_weights(x, vector<vector<vector<int8_t> > >(y, vector<vector<int8_t> >(z, vector<int8_t>(w, 0))));
 	FILE* ptr_weights = fopen(filename, "rb");  // r for read, b for binary
 	int r2 = fread(conv1_weights, sizeof(float), x * y * z * w, ptr_weights);
 	printf("Read weights: %d\n", r2);
 	fclose(ptr_weights);
 
-	int8_t conv1_inputs_int8[temp] = int8_weights(conv1_weights_float);
+	vector<float> abs_conv1_weights = find_abs(conv1_weights, temp);
+	float max = find_maximum(abs_conv1_weights);
+	scale_weights[layer_count] = (127 / max);
 
 	int i = 0;
 	int f = 0;
@@ -1247,12 +1071,13 @@ vector<vector<vector<vector<int8_t> > > > conv_weights_int8(const char* filename
 		for (f = 0; f < y; f++) {
 			for (j = 0; j < z; j++) {
 				for (k = 0; k < w; k++) {
-					reshaped_weights[i][f][j][k] = conv1_weights_int8[count];
+					reshaped_weights[i][f][j][k] = round(scale_weights[layer_count] * conv1_weights[count]);
 					count++;
 				}
 			}
 		}
 	}
+
 
 	return reshaped_weights;
 }
@@ -1385,17 +1210,19 @@ vector<int32_t> get_biases_int32(const char* filename, int x) {
 
 	/* Weights Data */
 	float conv1_biases[x];
-	vector<float>biases(x, 0);
+	vector<int32_t>biases(x, 0);
 
 	FILE* ptr_weights = fopen(filename, "rb");  // r for read, b for binary
 	int r2 = fread(conv1_biases, sizeof(float), x, ptr_weights);
 	printf("Read biases: %d\n", r2);
 	fclose(ptr_weights);
 
-	int32_t conv1_biases_int32 = int32_biases(conv1_biases);
+	int i = 0;
+	for (i = 0; i < x; ++i) {
+		biases[i] = round(scale_biases[layer_count] * conv1_biases[i]);
+	}
 
-
-	return conv1_biases_int32;
+	return biases;
 }
 
 /*
