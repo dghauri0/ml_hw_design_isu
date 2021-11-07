@@ -17,12 +17,14 @@
 #include <pthread.h>
 #include <signal.h>
 #include <string.h>
+#include <inttypes.h>
 
 #define MAX_THREAD 2
 #define PROFILING_ITERATIONS 1
 
 using namespace std;
 
+int debug_flag = 1;
 int part = 0;
 int layer_count = 0;
 
@@ -49,6 +51,7 @@ vector<vector<float> > conv_weights_tiling(const char* filename, const int x, co
 vector<vector<vector<vector<int8_t> > > > conv_weights_int8(const char* filename, const int x, const int y, const int z, const int w);
 vector<vector<vector<uint8_t> > > image_import_uint8(const char* fileName);
 vector<int32_t> get_biases_int32(const char* filename, int x);
+vector<vector<vector<int32_t> > > ofmap_gen_conv_int32(const vector<vector<vector<uint8_t> > >& input_fmap, const vector<vector<vector<vector<int8_t> > > >& weights, const vector<int32_t>& bias);
 float find_maximum(vector<float> &original);
 vector<float> find_abs(vector<float> &original);
 void compute_scale_biases(int layer_num);
@@ -69,8 +72,8 @@ struct conv_layer {
 // Helper function: Finds maximum element within 1D vector.
 float find_maximum(vector<float> &original) {
 	int i;
-	float maximum = numeric_limits<float>::min();
-	for (i = 0; i < original.size(); i++) {
+	float maximum = original[0];
+	for (i = 1; i < original.size(); i++) {
 		if (original[i] > maximum) {
 			maximum = original[i];
 		}
@@ -82,8 +85,9 @@ float find_maximum(vector<float> &original) {
 vector<float> find_abs(float *original, int size) {
 	int i;
 	vector<float> output(size, 0);
+
 	for (i = 0; i < size; i++) {
-		output[i] = abs(original[i]);
+		output[i] = fabs(original[i]);
 	}
 	return output;
 }
@@ -109,7 +113,7 @@ int main() {
 		vector<vector<vector<uint8_t> > > conv1_image(64, vector<vector<uint8_t> >(64, vector<uint8_t>(3, 0)));
 		vector<vector<vector<vector<int8_t> > > > conv1_weights(5, vector<vector<vector<int8_t> > >(5, vector<vector<int8_t> >(3, vector<int8_t>(32, 0))));
 		vector<int32_t> conv1_biases(32, 0);
-		vector<vector<vector<float> > > conv1_out(60, vector<vector<float> >(60, vector<float>(32, 0)));
+		vector<vector<vector<int32_t> > > conv1_out(60, vector<vector<int32_t> >(60, vector<int32_t>(32, 0)));
 		//vector<vector<vector<float> > > conv1_out_threaded(60, vector<vector<float> >(60, vector<float>(32, 0)));
 
 
@@ -129,7 +133,7 @@ int main() {
 		//conv1_struct->output = &conv1_out_threaded;
 
 		// First Convolutional Layer Output
-		conv1_out = ofmap_gen_conv(conv1_image, conv1_weights, conv1_biases);
+		conv1_out = ofmap_gen_conv_int32(conv1_image, conv1_weights, conv1_biases);
 
 		/*
 		// Thread Handler Start
@@ -149,13 +153,30 @@ int main() {
 		auto end = std::chrono::high_resolution_clock::now();	// End measuring time
 		auto elapsed = std::chrono::duration_cast<std::chrono::nanoseconds>(end-begin);
 
-		printf("conv1out: %f\n", conv1_out[0][0][0]);
+		printf("conv1out: %" PRId32 "\n", conv1_out[0][0][0]);
+		printf("Layer %d: scale_weights = %f\n", layer_count, scale_weights[layer_count]);
+		printf("Layer %d: scale_input = %f\n", layer_count, scale_input[layer_count]);
+		printf("Layer %d: scale_biases = %f\n", layer_count, scale_biases[layer_count]);
+		if (debug_flag == 2) {
+			int i, j, k;
+			for (i = 0; i < 60; i++) {
+				for (j = 0; j < 60; j++) {
+					for (k = 0; k < 32; k++) {
+						if (conv1_out[i][j][k] != 0) {
+							printf("conv1out: %" PRId32 "\n", conv1_out[i][j][k]);
+						}
+					}
+				}
+			}
+		}
+
 		//printf("conv1out_threaded: %f\n", conv1_out_threaded[0][0][0]);
 
 		//for (t_i = 0; t_i < MAX_THREAD; t_i++) { 
 		//	pthread_exit();
 		//}
 		
+		/*
 		vector<vector<vector<float> > > test1_inputs = intermediate_compare_reshape("/local/jupyter/cpre482x-lab1/Inference/Template_Visual_Studio/Test_Input0/layer_0_output.bin", 60, 60, 32);
 
 		// Comparison
@@ -190,6 +211,7 @@ int main() {
 		time_sum += temp_time;
 		printf("conv1time: %.3f seconds.\n", temp_time);	// Report time.
 		part = 0;
+		*/
 		
 		/*
 		//================================================================================================
@@ -980,6 +1002,53 @@ vector<vector<vector<float> > > ofmap_gen_conv(const vector<vector<vector<float>
 	return output;
 }
 
+/*
+Generate
+ */
+vector<vector<vector<int32_t> > > ofmap_gen_conv_int32(const vector<vector<vector<uint8_t> > >& input_fmap, const vector<vector<vector<vector<int8_t> > > >& weights, const vector<int32_t>& bias) {
+	int x = 0;
+	int y = 0;
+	int z = 0;
+	int filter = 0;
+	int a = 0;
+	int b = 0;
+	int c = 0;
+	int filter_length = (int)weights.size();
+	int filter_height = (int)weights[0].size();
+	int filter_channel = (int)weights[0][0].size();
+	int filter_num = (int)weights[0][0][0].size();
+	int ifmap_lenght = (int)input_fmap.size();
+	int ifmap_height = (int)input_fmap[0].size();
+	int ifmap_channel = (int)input_fmap[0][0].size();
+	float sum = 0;
+
+	//printf("Output map height: %d\n", ifmap_height - filter_height);
+
+	vector<vector<vector<int32_t> > > output((ifmap_lenght - filter_length) + 1, vector<vector<int32_t> >((ifmap_height - filter_height) + 1, vector<int32_t>(filter_num, 0)));
+	//vector<vector<vector<float> > > fmap_3d_section(filter_length, vector<vector<float> >(filter_height, vector<float>(filter_channel, 0)));
+
+	for (filter = 0; filter < filter_num; filter++) {											/* # of filters and # of output channels */
+		for (x = 0; x <= ifmap_lenght - filter_length; x++) {									/* length of output */
+			for (y = 0; y <= ifmap_height - filter_height; y++) {								/* height of output */
+				for (z = 0; z < ifmap_channel; z++) {											/* input channel */
+					for (a = 0; a < filter_length; a++) {										/* filter length */
+						for (b = 0; b < filter_height; b++) {									/* filter height */
+							sum += input_fmap[x + a][y + b][z] * weights[a][b][z][filter];		/* MultSum Accumulation */
+						}
+					}
+				}
+				output[x][y][filter] = sum + bias[filter];
+				sum = 0;
+
+				/* ReLU */
+				if (output[x][y][filter] < 0) {
+					output[x][y][filter] = 0;
+				}
+			}
+		}
+	}
+	return output;
+}
 
 vector<float> ofmap_gen_dense(vector<float>& input_fmap, vector<vector<float> >& weights, vector<float>& bias, int output_size, bool last_layer) {
 	int x = 0;
@@ -1059,6 +1128,9 @@ vector<vector<vector<vector<int8_t> > > > conv_weights_int8(const char* filename
 
 	vector<float> abs_conv1_weights = find_abs(conv1_weights, temp);
 	float max = find_maximum(abs_conv1_weights);
+	if (debug_flag == 1) {
+		printf("MAX for Conv %d Layer: %f", layer_count + 1, max);
+	}
 	scale_weights[layer_count] = (127 / max);
 
 	int i = 0;
