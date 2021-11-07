@@ -24,7 +24,7 @@
 
 using namespace std;
 
-int debug_flag = 1;
+int debug_flag = 0;
 int part = 0;
 int layer_count = 0;
 
@@ -53,12 +53,21 @@ vector<vector<vector<uint8_t> > > image_import_uint8(const char* fileName);
 vector<int32_t> get_biases_int32(const char* filename, int x);
 vector<vector<vector<int32_t> > > ofmap_gen_conv_int32(const vector<vector<vector<uint8_t> > >& input_fmap, const vector<vector<vector<vector<int8_t> > > >& weights, const vector<int32_t>& bias);
 vector<vector<vector<uint8_t> > > next_conv_uint8_input(vector<vector<vector<float> > > &input);
+vector<vector<vector<uint8_t> > > max_pooling_2D_uint8(vector<vector<vector<uint8_t> > >& ofmap_in);
+vector<vector<vector<float> > > pooling_convert_to_float(vector<vector<vector<uint8_t> > > &original);
 float find_maximum(vector<float> &original);
 float find_maximum_3d(vector<vector<vector<float> > > &original);
-vector<float> find_abs(vector<float> &original);
+vector<float> find_abs(float *original, int size);
 vector<vector<vector<float> > > find_abs_3d(vector<vector<vector<float> > > &original);
 void compute_scale_biases(int layer_num);
 float dequantize_element(int32_t &element);
+vector<vector<vector<float> > > max_pooling_2D(vector<vector<vector<float> > >& ofmap_in);
+vector<uint8_t> flatten_uint8(vector<vector<vector<uint8_t> > >& in_layer);
+vector<vector<int8_t> > dense_weights_int8(const char* filename, int x, int y);
+vector<int32_t> ofmap_gen_dense_int32(vector<uint8_t>& input_fmap, vector<vector<int8_t> >& weights, vector<int32_t>& bias, int output_size, bool last_layer);
+vector<float> flatten_convert_to_float(vector<uint8_t> &original);
+vector<float> find_abs_dense(vector<float> &input);
+vector<uint8_t> next_dense_uint8_input(vector<float> &input);
 
 // Scale Vectors (6 CONV layers, 2 DENSE layers)
 vector<float> scale_weights(8 , 0);
@@ -72,6 +81,8 @@ vector<vector<vector<float> > > dequantized_conv3(26, vector<vector<float> >(26,
 vector<vector<vector<float> > > dequantized_conv4(24, vector<vector<float> >(24, vector<float>(64, 0))); // CONV 4
 vector<vector<vector<float> > > dequantized_conv5(10, vector<vector<float> >(10, vector<float>(64, 0))); // CONV 5
 vector<vector<vector<float> > > dequantized_conv6(8, vector<vector<float> >(8, vector<float>(128, 0)));  // CONV 6
+vector<float> dequantized_dense1(256, 0);  // DENSE1
+vector<float> dequantized_dense2(200, 0);  // DENSE2
 
 struct conv_layer {
 	
@@ -123,6 +134,18 @@ vector<float> find_abs(float *original, int size) {
 	return output;
 }
 
+// Helper function: Takes 1D vector and performs abs on each element.
+vector<float> find_abs_dense(vector<float> &input) {
+	int i;
+	int size = (int) input.size();
+	vector<float> output(size, 0);
+
+	for (i = 0; i < size; i++) {
+		output[i] = fabs(input[i]);
+	}
+	return output;
+}
+
 // Helper function: Takes 3D vector and performs abs on each element.
 vector<vector<vector<float> > > find_abs_3d(vector<vector<vector<float> > > &original) {
 	int i, f, j;
@@ -138,6 +161,37 @@ vector<vector<vector<float> > > find_abs_3d(vector<vector<vector<float> > > &ori
 			}
 		}
 	}
+	return output;
+}
+
+vector<vector<vector<float> > > pooling_convert_to_float(vector<vector<vector<uint8_t> > > &original) {
+	int i, f, j;
+	int length = (int) original.size();
+	int height = (int) original[0].size();
+	int channels = (int) original[0][0].size();
+
+	vector<vector<vector<float> > > output(length, vector<vector<float> >(height, vector<float>(channels, 0)));
+
+	for (i = 0; i < length; i++) {
+		for (f = 0; f < height; f++) {
+			for (j = 0; j < channels; j++) {
+				output[i][f][j] = original[i][f][j] / scale_input[layer_count];
+			}
+		}
+	}
+
+	return output;
+}
+
+vector<float> flatten_convert_to_float(vector<uint8_t> &original) {
+	int i;
+
+	vector<float> output(original.size(), 0);
+
+	for (i = 0; i < original.size(); i++) {
+		output[i] = original[i] / scale_input[layer_count];
+	}
+
 	return output;
 }
 
@@ -168,6 +222,23 @@ vector<vector<vector<uint8_t> > > next_conv_uint8_input(vector<vector<vector<flo
 				output[i][f][j] = round(scale_input[layer_count] * input[i][f][j]);
 			}
 		}
+	}
+	return output;	
+}
+
+vector<uint8_t> next_dense_uint8_input(vector<float> &input) {
+	float max;
+	int i;
+	int size = (int) input.size();
+
+	vector<float> abs_conv(size, 0);
+	abs_conv = find_abs_dense(input);
+	max = find_maximum(abs_conv);
+	scale_input[layer_count] = (255 / max);
+
+	vector<uint8_t> output(size, 0);
+	for (i = 0; i < size; i++) {
+		output[i] = round(scale_input[layer_count] * input[i]);
 	}
 	return output;	
 }
@@ -215,8 +286,6 @@ int main() {
 		layer_count++; // important. do in this order.
 		conv1_out_uint8 = next_conv_uint8_input(dequantized_conv1);
 		
-
-		
 		auto end = std::chrono::high_resolution_clock::now();	// End measuring time
 		auto elapsed = std::chrono::duration_cast<std::chrono::nanoseconds>(end-begin);
 
@@ -253,7 +322,7 @@ int main() {
 		int i = 0;
 		int f = 0;
 		int k = 0;
-		float epsilon = 0.0001f;
+		float epsilon = 0.1f;
 
 		float max_diff = 0;
 		float curr_diff = 0;
@@ -267,7 +336,7 @@ int main() {
 					}
 					else {
 						// The values are different
-						//printf("%d, %d, %d\n", i, f, k);
+						printf("%d, %d, %d\n", i, f, k);
 					}
 					if (curr_diff > max_diff) {
 						max_diff = curr_diff;
@@ -293,14 +362,14 @@ int main() {
 		vector<vector<vector<vector<int8_t> > > > conv2_weights(5, vector<vector<vector<int8_t> > >(5, vector<vector<int8_t> >(32, vector<int8_t>(32, 0))));
 		vector<int32_t> conv2_biases(32, 0);
 		vector<vector<vector<int32_t> > > conv2_out(56, vector<vector<int32_t> >(56, vector<int32_t>(32, 0)));
-		vector<vector<vector<uint8_t> > > conv2_out_uint8(60, vector<vector<uint8_t> >(60, vector<uint8_t>(32, 0)));
+		vector<vector<vector<uint8_t> > > conv2_out_uint8(56, vector<vector<uint8_t> >(56, vector<uint8_t>(32, 0)));
 		//vector<vector<vector<float> > > conv2_out_tiled(56, vector<vector<float> >(56, vector<float>(32, 0)));
 
 		//struct conv_layer *conv2_struct = (struct conv_layer *) malloc (sizeof (struct conv_layer));
 
 		begin = std::chrono::high_resolution_clock::now(); // Start measuring time
 
-		printf("Layer count is: %d.\n", layer_count);
+		//printf("Layer count is: %d.\n", layer_count);
 		conv2_weights = conv_weights_int8("/local/jupyter/cpre482x-lab1/Inference/Template_Visual_Studio/Test_Input0/conv2_weights.bin", 5, 5, 32, 32);
 		compute_scale_biases(layer_count);
 		conv2_biases = get_biases_int32("/local/jupyter/cpre482x-lab1/Inference/Template_Visual_Studio/Test_Input0/conv2_biases.bin", 32);
@@ -314,9 +383,9 @@ int main() {
 
 		//conv2_out_tiled = ofmap_gen_conv2_tiling(conv1_out, conv2_weights, conv2_biases, 32);
 		conv2_out = ofmap_gen_conv_int32(conv1_out_uint8, conv2_weights, conv2_biases);
-		conv2_out_uint8 = next_conv_uint8_input(dequantized_conv2);
 		layer_count++;
-
+		conv2_out_uint8 = next_conv_uint8_input(dequantized_conv2);
+		
 		end = std::chrono::high_resolution_clock::now();	// End measuring time
 		elapsed = std::chrono::duration_cast<std::chrono::nanoseconds>(end-begin);
 
@@ -342,7 +411,7 @@ int main() {
 					}
 					else {
 						// The values are different
-						//printf("%d, %d, %d\n", i, f, k);
+						printf("%d, %d, %d\n", i, f, k);
 					}
 					if (curr_diff > max_diff) {
 						max_diff = curr_diff;
@@ -356,7 +425,7 @@ int main() {
 		printf("conv2time: %.3f seconds.\n", temp_time);	// Report time.
 		part = 0;
 		
-		/*
+		
 		//================================================================================================
 		//================================================================================================
 		//===============Max_Pooling1 Begin===============================================================
@@ -364,14 +433,19 @@ int main() {
 		//================================================================================================
 
 		
-		vector<vector<vector<float> > > pooling_out1(28, vector<vector<float> >(28, vector<float>(32, 0)));
+		vector<vector<vector<uint8_t> > > pooling_out1_uint8(28, vector<vector<uint8_t> >(28, vector<uint8_t>(32, 0)));
+		vector<vector<vector<float> > > pooling_out1_float(28, vector<vector<float> >(28, vector<float>(32, 0)));
 
 		begin = std::chrono::high_resolution_clock::now(); // Start measuring time
 		
-		pooling_out1 = max_pooling_2D(conv2_out_tiled);
-
+		pooling_out1_uint8 = max_pooling_2D_uint8(conv2_out_uint8);
+		
 		end = std::chrono::high_resolution_clock::now();	// End measuring time
 		elapsed = std::chrono::duration_cast<std::chrono::nanoseconds>(end-begin);
+
+		layer_count--;
+		pooling_out1_float = pooling_convert_to_float(pooling_out1_uint8);
+		layer_count++;
 
 		vector<vector<vector<float> > > test3_inputs = intermediate_compare_reshape("/local/jupyter/cpre482x-lab1/Inference/Template_Visual_Studio/Test_Input0/layer_2_output.bin", 28, 28, 32);
 
@@ -380,7 +454,7 @@ int main() {
 		for (i = 0; i < 28; ++i) {
 			for (f = 0; f < 28; ++f) {
 				for (k = 0; k < 32; ++k) {
-					curr_diff = fabs(test3_inputs[i][f][k] - pooling_out1[i][f][k]);
+					curr_diff = fabs(test3_inputs[i][f][k] - pooling_out1_float[i][f][k]);
 					if (curr_diff < epsilon) {
 						// The values are equal
 					}
@@ -394,6 +468,16 @@ int main() {
 				}
 			}
 		}
+		printf("pooling1out (uint8): %" PRIu8 "\n", pooling_out1_uint8[0][0][0]);
+		int r = 0;
+		if (debug_flag == 3) {
+			for (r = 0; r < 8; r++) {
+				printf("Layer %d scaled_weights: %f.\n", r, scale_weights[r]);
+				printf("Layer %d scaled_input: %f.\n", r, scale_input[r]);
+				printf("Layer %d scaled_biases: %f.\n", r, scale_biases[r]);
+			} 
+		}
+		printf("pooling1out (float): %f\n", pooling_out1_float[0][0][0]);
 		printf("pooling1 diff: %f\n", max_diff);
 		temp_time = elapsed.count() * 1e-9;
 		time_sum += temp_time;
@@ -407,29 +491,36 @@ int main() {
 		//================================================================================================
 
 
-		vector<vector<vector<vector<float> > > > conv3_weights(3, vector<vector<vector<float> > >(3, vector<vector<float> >(32, vector<float>(64, 0))));
-		vector<float> conv3_biases(64, 0);
-		vector<vector<vector<float> > > conv3_out(26, vector<vector<float> >(26, vector<float>(64, 0)));
+		vector<vector<vector<vector<int8_t> > > > conv3_weights(3, vector<vector<vector<int8_t> > >(3, vector<vector<int8_t> >(32, vector<int8_t>(64, 0))));
+		vector<int32_t> conv3_biases(64, 0);
+		vector<vector<vector<int32_t> > > conv3_out(26, vector<vector<int32_t> >(26, vector<int32_t>(64, 0)));
+		vector<vector<vector<uint8_t> > > conv3_out_uint8(26, vector<vector<uint8_t> >(26, vector<uint8_t>(64, 0)));
 		//vector<vector<vector<float> > > conv3_out_threaded(26, vector<vector<float> >(26, vector<float>(64, 0)));
 
 		//struct conv_layer *conv3_struct = (struct conv_layer *) malloc (sizeof (struct conv_layer));
 
 		begin = std::chrono::high_resolution_clock::now(); // Start measuring time
 
-		conv3_weights = conv_weights("/local/jupyter/cpre482x-lab1/Inference/Template_Visual_Studio/Test_Input0/conv3_weights.bin", 3, 3, 32, 64);
-		conv3_biases = get_biases("/local/jupyter/cpre482x-lab1/Inference/Template_Visual_Studio/Test_Input0/conv3_biases.bin", 64);
+		conv3_weights = conv_weights_int8("/local/jupyter/cpre482x-lab1/Inference/Template_Visual_Studio/Test_Input0/conv3_weights.bin", 3, 3, 32, 64);
+		compute_scale_biases(layer_count);
+		conv3_biases = get_biases_int32("/local/jupyter/cpre482x-lab1/Inference/Template_Visual_Studio/Test_Input0/conv3_biases.bin", 64);
 		
 
 		// Third Convolutional Layer Output 
 
 		//conv3_out_threaded = *conv3_struct->output;
-		conv3_out = ofmap_gen_conv(pooling_out1, conv3_weights, conv3_biases);
+		conv3_out = ofmap_gen_conv_int32(pooling_out1_uint8, conv3_weights, conv3_biases);
+		layer_count++;
+		conv3_out_uint8 = next_conv_uint8_input(dequantized_conv3);
+		
 
 		end = std::chrono::high_resolution_clock::now();	// End measuring time
 		elapsed = std::chrono::duration_cast<std::chrono::nanoseconds>(end-begin);
 
 		//printf("conv3out_threaded: %f\n", conv3_out_threaded[0][0][0]);
-		printf("conv3out: %f\n", conv3_out[0][0][0]);
+		printf("conv3out (int32): %" PRId32 "\n", conv3_out[0][0][0]);
+		printf("conv3out (dequantized): %f\n", dequantized_conv3[0][0][0]);
+		printf("conv3out (uint8): %" PRIu8 "\n", conv3_out_uint8[0][0][0]);
 
 		vector<vector<vector<float> > > test4_inputs = intermediate_compare_reshape("/local/jupyter/cpre482x-lab1/Inference/Template_Visual_Studio/Test_Input0/layer_3_output.bin", 26, 26, 64);
 
@@ -438,7 +529,7 @@ int main() {
 		for (i = 0; i < 26; ++i) {
 			for (f = 0; f < 26; ++f) {
 				for (k = 0; k < 64; ++k) {
-					curr_diff = fabs(test4_inputs[i][f][k] - conv3_out[i][f][k]);
+					curr_diff = fabs(test4_inputs[i][f][k] - dequantized_conv3[i][f][k]);
 					if (curr_diff < epsilon) {
 						// The values are equal
 					}
@@ -465,28 +556,34 @@ int main() {
 		//================================================================================================
 
 		
-		vector<vector<vector<vector<float> > > > conv4_weights(3, vector<vector<vector<float> > >(3, vector<vector<float> >(64, vector<float>(64, 0))));
-		vector<float> conv4_biases(64, 0);
-		vector<vector<vector<float> > > conv4_out(24, vector<vector<float> >(24, vector<float>(64, 0)));
+		vector<vector<vector<vector<int8_t> > > > conv4_weights(3, vector<vector<vector<int8_t> > >(3, vector<vector<int8_t> >(64, vector<int8_t>(64, 0))));
+		vector<int32_t> conv4_biases(64, 0);
+		vector<vector<vector<int32_t> > > conv4_out(24, vector<vector<int32_t> >(24, vector<int32_t>(64, 0)));
+		vector<vector<vector<uint8_t> > > conv4_out_uint8(24, vector<vector<uint8_t> >(24, vector<uint8_t>(64, 0)));
 		//vector<vector<vector<float> > > conv4_out_threaded(24, vector<vector<float> >(24, vector<float>(64, 0)));
 
 		//struct conv_layer *conv4_struct = (struct conv_layer *) malloc (sizeof (struct conv_layer));
 
 		begin = std::chrono::high_resolution_clock::now(); // Start measuring time
 
-		conv4_weights = conv_weights("/local/jupyter/cpre482x-lab1/Inference/Template_Visual_Studio/Test_Input0/conv4_weights.bin", 3, 3, 64, 64);
-		conv4_biases = get_biases("/local/jupyter/cpre482x-lab1/Inference/Template_Visual_Studio/Test_Input0/conv4_biases.bin", 64);
+		conv4_weights = conv_weights_int8("/local/jupyter/cpre482x-lab1/Inference/Template_Visual_Studio/Test_Input0/conv4_weights.bin", 3, 3, 64, 64);
+		compute_scale_biases(layer_count);
+		conv4_biases = get_biases_int32("/local/jupyter/cpre482x-lab1/Inference/Template_Visual_Studio/Test_Input0/conv4_biases.bin", 64);
 		
 
 		// Fourth Convlolutional Layer Output 
-		conv4_out = ofmap_gen_conv(conv3_out, conv4_weights, conv4_biases);
+		conv4_out = ofmap_gen_conv_int32(conv3_out_uint8, conv4_weights, conv4_biases);
+		layer_count++;
+		conv4_out_uint8 = next_conv_uint8_input(dequantized_conv4);
 		//conv4_out_threaded = *conv4_struct->output;
 
 		end = std::chrono::high_resolution_clock::now();	// End measuring time
 		elapsed = std::chrono::duration_cast<std::chrono::nanoseconds>(end-begin);
 
 		//printf("conv4out_threaded: %f\n", conv4_out_threaded[0][0][0]);
-		printf("conv4out: %f\n", conv4_out[0][0][0]);
+		printf("conv4out (int32): %" PRId32 "\n", conv4_out[0][0][0]);
+		printf("conv4out (dequantized): %f\n", dequantized_conv4[0][0][0]);
+		printf("conv4out (uint8): %" PRIu8 "\n", conv4_out_uint8[0][0][0]);
 
 		vector<vector<vector<float> > > test5_inputs = intermediate_compare_reshape("/local/jupyter/cpre482x-lab1/Inference/Template_Visual_Studio/Test_Input0/layer_4_output.bin", 24, 24, 64);
 
@@ -495,7 +592,7 @@ int main() {
 		for (i = 0; i < 24; ++i) {
 			for (f = 0; f < 24; ++f) {
 				for (k = 0; k < 64; ++k) {
-					curr_diff = fabs(test5_inputs[i][f][k] - conv4_out[i][f][k]);
+					curr_diff = fabs(test5_inputs[i][f][k] - dequantized_conv4[i][f][k]);
 					if (curr_diff < epsilon) {
 						// The values are equal
 					}
@@ -515,22 +612,27 @@ int main() {
 		printf("conv4time: %.3f seconds.\n", temp_time);	// Report time.
 		part = 0;
 
-
+		
 		//================================================================================================
 		//================================================================================================
 		//===============Max_Pooling2 Begin===============================================================
 		//================================================================================================
 		//================================================================================================
 
-		
-		vector<vector<vector<float> > > pooling_out2(12, vector<vector<float> >(12, vector<float>(64, 0)));
+		vector<vector<vector<uint8_t> > > pooling_out2_uint8(12, vector<vector<uint8_t> >(12, vector<uint8_t>(64, 0)));
+		vector<vector<vector<float> > > pooling_out2_float(12, vector<vector<float> >(12, vector<float>(64, 0)));
+
 
 		begin = std::chrono::high_resolution_clock::now(); // Start measuring time
 
-		pooling_out2 = max_pooling_2D(conv4_out);
+		pooling_out2_uint8 = max_pooling_2D_uint8(conv4_out_uint8);
 
 		end = std::chrono::high_resolution_clock::now();	// End measuring time
 		elapsed = std::chrono::duration_cast<std::chrono::nanoseconds>(end-begin);	
+
+		layer_count--;
+		pooling_out2_float = pooling_convert_to_float(pooling_out2_uint8);
+		layer_count++;
 
 		vector<vector<vector<float> > > test6_inputs = intermediate_compare_reshape("/local/jupyter/cpre482x-lab1/Inference/Template_Visual_Studio/Test_Input0/layer_5_output.bin", 12, 12, 64);
 
@@ -539,7 +641,7 @@ int main() {
 		for (i = 0; i < 12; ++i) {
 			for (f = 0; f < 12; ++f) {
 				for (k = 0; k < 64; ++k) {
-					curr_diff = fabs(test6_inputs[i][f][k] - pooling_out2[i][f][k]);
+					curr_diff = fabs(test6_inputs[i][f][k] - pooling_out2_float[i][f][k]);
 					if (curr_diff < epsilon) {
 						//the values are equal
 					}
@@ -553,6 +655,16 @@ int main() {
 				}
 			}
 		}
+		printf("pooling1out (uint8): %" PRIu8 "\n", pooling_out2_uint8[0][0][0]);
+		if (debug_flag == 3) {
+			int r = 0;
+			for (r = 0; r < 8; r++) {
+				printf("Layer %d scaled_weights: %f.\n", r, scale_weights[r]);
+				printf("Layer %d scaled_input: %f.\n", r, scale_input[r]);
+				printf("Layer %d scaled_biases: %f.\n", r, scale_biases[r]);
+			} 
+		}
+		printf("pooling1out (float): %f\n", pooling_out2_float[0][0][0]);
 		printf("pooling2 diff: %f\n", max_diff);
 		temp_time = elapsed.count() * 1e-9;
 		time_sum += temp_time;		
@@ -566,21 +678,26 @@ int main() {
 		//================================================================================================
 
 
-		vector<vector<vector<vector<float> > > > conv5_weights(3, vector<vector<vector<float> > >(3, vector<vector<float> >(64, vector<float>(64, 0))));
-		vector<float> conv5_biases(64, 0);
-		vector<vector<vector<float> > > conv5_out(10, vector<vector<float> >(10, vector<float>(64, 0)));
+		vector<vector<vector<vector<int8_t> > > > conv5_weights(3, vector<vector<vector<int8_t> > >(3, vector<vector<int8_t> >(64, vector<int8_t>(64, 0))));
+		vector<int32_t> conv5_biases(64, 0);
+		vector<vector<vector<int32_t> > > conv5_out(10, vector<vector<int32_t> >(10, vector<int32_t>(64, 0)));
+		vector<vector<vector<uint8_t> > > conv5_out_uint8(10, vector<vector<uint8_t> >(10, vector<uint8_t>(64, 0)));
 		//vector<vector<vector<float> > > conv5_out_threaded(10, vector<vector<float> >(10, vector<float>(64, 0)));
 
 		//struct conv_layer *conv5_struct = (struct conv_layer *) malloc (sizeof (struct conv_layer));
 
 		begin = std::chrono::high_resolution_clock::now(); // Start measuring time
 
-		conv5_weights = conv_weights("/local/jupyter/cpre482x-lab1/Inference/Template_Visual_Studio/Test_Input0/conv5_weights.bin", 3, 3, 64, 64);
-		conv5_biases = get_biases("/local/jupyter/cpre482x-lab1/Inference/Template_Visual_Studio/Test_Input0/conv5_biases.bin", 64);
+		conv5_weights = conv_weights_int8("/local/jupyter/cpre482x-lab1/Inference/Template_Visual_Studio/Test_Input0/conv4_weights.bin", 3, 3, 64, 64);
+		compute_scale_biases(layer_count);
+		conv5_biases = get_biases_int32("/local/jupyter/cpre482x-lab1/Inference/Template_Visual_Studio/Test_Input0/conv4_biases.bin", 64);
+		layer_count++;
+		
 
-		// Fifth Convolutional Layer Output 
-		conv5_out = ofmap_gen_conv(pooling_out2, conv5_weights, conv5_biases);
-
+		// Fifth Convlolutional Layer Output 
+		conv5_out = ofmap_gen_conv_int32(pooling_out2_uint8, conv5_weights, conv5_biases);
+		layer_count++;
+		conv5_out_uint8 = next_conv_uint8_input(dequantized_conv5);
 		//conv5_out_threaded = *conv5_struct->output;
 
 
@@ -588,7 +705,9 @@ int main() {
 		elapsed = std::chrono::duration_cast<std::chrono::nanoseconds>(end-begin);	
 
 		//printf("conv5out_threaded: %f\n", conv5_out_threaded[0][0][0]);	
-		printf("conv5out: %f\n", conv5_out[0][0][0]);
+		printf("conv5out (int32): %" PRId32 "\n", conv5_out[0][0][0]);
+		printf("conv5out (dequantized): %f\n", dequantized_conv5[0][0][0]);
+		printf("conv5out (uint8): %" PRIu8 "\n", conv5_out_uint8[0][0][0]);
 
 		vector<vector<vector<float> > > test7_inputs = intermediate_compare_reshape("/local/jupyter/cpre482x-lab1/Inference/Template_Visual_Studio/Test_Input0/layer_6_output.bin", 10, 10, 64);
 
@@ -597,7 +716,7 @@ int main() {
 		for (i = 0; i < 10; ++i) {
 			for (f = 0; f < 10; ++f) {
 				for (k = 0; k < 64; ++k) {
-					curr_diff = fabs(test7_inputs[i][f][k] - conv5_out[i][f][k]);
+					curr_diff = fabs(test7_inputs[i][f][k] - dequantized_conv5[i][f][k]);
 					if (curr_diff < epsilon) {
 						// The values are equal
 					}
@@ -625,9 +744,10 @@ int main() {
 		//================================================================================================
 
 
-		vector<vector<vector<vector<float> > > > conv6_weights(3, vector<vector<vector<float> > >(3, vector<vector<float> >(64, vector<float>(128, 0))));
-		vector<float> conv6_biases(128, 0);
-		vector<vector<vector<float> > > conv6_out(8, vector<vector<float> >(8, vector<float>(128, 0)));
+		vector<vector<vector<vector<int8_t> > > > conv6_weights(3, vector<vector<vector<int8_t> > >(3, vector<vector<int8_t> >(64, vector<int8_t>(128, 0))));
+		vector<int32_t> conv6_biases(128, 0);
+		vector<vector<vector<int32_t> > > conv6_out(8, vector<vector<int32_t> >(8, vector<int32_t>(128, 0)));
+		vector<vector<vector<uint8_t> > > conv6_out_uint8(8, vector<vector<uint8_t> >(8, vector<uint8_t>(128, 0)));
 		//vector<vector<vector<float> > > conv6_out_threaded(8, vector<vector<float> >(8, vector<float>(128, 0)));
 
 		
@@ -636,21 +756,25 @@ int main() {
 
 		begin = std::chrono::high_resolution_clock::now(); // Start measuring time
 
-		conv6_weights = conv_weights("/local/jupyter/cpre482x-lab1/Inference/Template_Visual_Studio/Test_Input0/conv6_weights.bin", 3, 3, 64, 128);
-		conv6_biases = get_biases("/local/jupyter/cpre482x-lab1/Inference/Template_Visual_Studio/Test_Input0/conv6_biases.bin", 128);
+		conv6_weights = conv_weights_int8("/local/jupyter/cpre482x-lab1/Inference/Template_Visual_Studio/Test_Input0/conv6_weights.bin", 3, 3, 64, 128);
+		compute_scale_biases(layer_count);
+		conv6_biases = get_biases_int32("/local/jupyter/cpre482x-lab1/Inference/Template_Visual_Studio/Test_Input0/conv6_biases.bin", 128);
 
 
 		// Sixth Convlolutional Layer Output 
-		conv6_out = ofmap_gen_conv(conv5_out, conv6_weights, conv6_biases);
-
+		conv6_out = ofmap_gen_conv_int32(conv5_out_uint8, conv6_weights, conv6_biases);
+		layer_count++;
+		conv6_out_uint8 = next_conv_uint8_input(dequantized_conv6);
 		//conv6_out_threaded = *conv6_struct->output;
-
+		
 
 		end = std::chrono::high_resolution_clock::now();	// End measuring time
 		elapsed = std::chrono::duration_cast<std::chrono::nanoseconds>(end-begin);
 
-		printf("conv6out: %f\n", conv6_out[0][0][0]);	
-		//printf("conv6out_threaded: %f\n", conv6_out_threaded[0][0][0]);	
+		//printf("conv6out_threaded: %f\n", conv6_out_threaded[0][0][0]);
+		printf("conv6out (int32): %" PRId32 "\n", conv6_out[0][0][0]);
+		printf("conv6out (dequantized): %f\n", dequantized_conv6[0][0][0]);
+		printf("conv6out (uint8): %" PRIu8 "\n", conv6_out_uint8[0][0][0]);
 
 
 		vector<vector<vector<float> > > test8_inputs = intermediate_compare_reshape("/local/jupyter/cpre482x-lab1/Inference/Template_Visual_Studio/Test_Input0/layer_7_output.bin", 8, 8, 128);
@@ -660,7 +784,7 @@ int main() {
 		for (i = 0; i < 8; ++i) {
 			for (f = 0; f < 8; ++f) {
 				for (k = 0; k < 128; ++k) {
-					curr_diff = fabs(test8_inputs[i][f][k] - conv6_out[i][f][k]);
+					curr_diff = fabs(test8_inputs[i][f][k] - dequantized_conv6[i][f][k]);
 					if (curr_diff < epsilon) {
 						// The values are equal
 					}
@@ -687,15 +811,19 @@ int main() {
 		//================================================================================================
 		//================================================================================================
 
-		
-		vector<vector<vector<float> > > pooling_out3(4, vector<vector<float> >(4, vector<float>(128, 0)));
+		vector<vector<vector<uint8_t> > > pooling_out3_uint8(4, vector<vector<uint8_t> >(4, vector<uint8_t>(128, 0)));
+		vector<vector<vector<float> > > pooling_out3_float(4, vector<vector<float> >(4, vector<float>(128, 0)));
 		
 		begin = std::chrono::high_resolution_clock::now(); // Start measuring time
 		
-		pooling_out3 = max_pooling_2D(conv6_out);
+		pooling_out3_uint8 = max_pooling_2D_uint8(conv6_out_uint8);
 
 		end = std::chrono::high_resolution_clock::now();	// End measuring time
 		elapsed = std::chrono::duration_cast<std::chrono::nanoseconds>(end-begin);
+
+		layer_count--;
+		pooling_out3_float = pooling_convert_to_float(pooling_out3_uint8);
+		layer_count++;
 
 		vector<vector<vector<float> > > test9_inputs = intermediate_compare_reshape("/local/jupyter/cpre482x-lab1/Inference/Template_Visual_Studio/Test_Input0/layer_8_output.bin", 4, 4, 128);
 
@@ -704,7 +832,7 @@ int main() {
 		for (i = 0; i < 4; ++i) {
 			for (f = 0; f < 4; ++f) {
 				for (k = 0; k < 128; ++k) {
-					curr_diff = fabs(test9_inputs[i][f][k] - pooling_out3[i][f][k]);
+					curr_diff = fabs(test9_inputs[i][f][k] - pooling_out3_float[i][f][k]);
 					if (curr_diff < epsilon) {
 						// The values are equal
 					}
@@ -719,12 +847,22 @@ int main() {
 			}
 		}
 		
+		printf("pooling3out (uint8): %" PRIu8 "\n", pooling_out3_uint8[0][0][0]);
+		if (debug_flag == 3) {
+			int r = 0;
+			for (r = 0; r < 8; r++) {
+				printf("Layer %d scaled_weights: %f.\n", r, scale_weights[r]);
+				printf("Layer %d scaled_input: %f.\n", r, scale_input[r]);
+				printf("Layer %d scaled_biases: %f.\n", r, scale_biases[r]);
+			} 
+		}
+		printf("pooling3out (float): %f\n", pooling_out3_float[0][0][0]);
 		printf("pooling3 diff: %f\n", max_diff);
 		temp_time = elapsed.count() * 1e-9;
 		time_sum += temp_time;
 		printf("pooling3time: %.3f seconds.\n", temp_time);	// Report time.
 
-		begin = std::chrono::high_resolution_clock::now(); // Start measuring time
+	
 
 
 		//================================================================================================
@@ -732,19 +870,25 @@ int main() {
 		//===============flat Begin=======================================================================
 		//================================================================================================
 		//================================================================================================
-
-
-		vector<float> flat = flatten(pooling_out3);
+		begin = std::chrono::high_resolution_clock::now(); // Start measuring time
+		
+		vector<uint8_t> flat(4 * 4 * 128, 0);
+		flat = flatten_uint8(pooling_out3_uint8);
+		vector<float> flat_float(4 * 4 * 128, 0);
 
 		end = std::chrono::high_resolution_clock::now();	// End measuring time
 		elapsed = std::chrono::duration_cast<std::chrono::nanoseconds>(end-begin);
+
+		layer_count--;
+		flat_float = flatten_convert_to_float(flat);
+		layer_count++;
 
 		vector<float> test10_inputs = get_biases("/local/jupyter/cpre482x-lab1/Inference/Template_Visual_Studio/Test_Input0/layer_9_output.bin", 4 * 4 * 128);
 
 		// Comparison 
 		max_diff = 0;
 		for (i = 0; i < 4 * 4 * 128; ++i) {
-			curr_diff = fabs(test10_inputs[i] - flat[i]);
+			curr_diff = fabs(test10_inputs[i] - flat_float[i]);
 			if (curr_diff < epsilon) {
 				// The values are equal
 			}
@@ -767,28 +911,32 @@ int main() {
 		//================================================================================================
 		//================================================================================================
 		
-		vector<vector<float> > dense1_weights(2048, vector<float>(256, 0));
-		vector<float> dense1_biases(256, 0);
-		vector<float> dense1_out(256, 0);
+		vector<vector<int8_t> > dense1_weights(2048, vector<int8_t>(256, 0));
+		vector<int32_t> dense1_biases(256, 0);
+		vector<int32_t> dense1_out_int32(256, 0);
 
 		begin = std::chrono::high_resolution_clock::now(); // Start measuring time
 
 
-		dense1_weights = dense_weights("/local/jupyter/cpre482x-lab1/Inference/Template_Visual_Studio/Test_Input0/dense1_weights.bin", 2048, 256);
-		dense1_biases = get_biases("/local/jupyter/cpre482x-lab1/Inference/Template_Visual_Studio/Test_Input0/dense1_biases.bin", 256);
+		dense1_weights = dense_weights_int8("/local/jupyter/cpre482x-lab1/Inference/Template_Visual_Studio/Test_Input0/dense1_weights.bin", 2048, 256);
+		dense1_biases = get_biases_int32("/local/jupyter/cpre482x-lab1/Inference/Template_Visual_Studio/Test_Input0/dense1_biases.bin", 256);
 
 		// First Dense Layer Output 
-		dense1_out = ofmap_gen_dense(flat, dense1_weights, dense1_biases, 256, false);
+		dense1_out_int32 = ofmap_gen_dense_int32(flat, dense1_weights, dense1_biases, 256, false);
 
+		layer_count++;
+		
 		end = std::chrono::high_resolution_clock::now();	// End measuring time
 		elapsed = std::chrono::duration_cast<std::chrono::nanoseconds>(end-begin);	
 
 		vector<float> test11_inputs = get_biases("/local/jupyter/cpre482x-lab1/Inference/Template_Visual_Studio/Test_Input0/layer_10_output.bin", 256);
 
+		dequantized_dense1 = softmax(dequantized_dense1);
+
 		// Comparison 
 		max_diff = 0;
 		for (i = 0; i < 256; ++i) {
-			curr_diff = fabs(test11_inputs[i] - dense1_out[i]);
+			curr_diff = fabs(test11_inputs[i] - dequantized_dense1[i]);
 			if (curr_diff < epsilon) {
 				// The values are equal
 			}
@@ -813,28 +961,33 @@ int main() {
 		//================================================================================================
 
 
-		vector<vector<float> > dense2_weights(256, vector<float>(200, 0));
-		vector<float> dense2_biases(200, 0);
-		vector<float> dense2_out(200, 0);
+		vector<vector<int8_t> > dense2_weights(256, vector<int8_t>(200, 0));
+		vector<int32_t> dense2_biases(200, 0);
+		vector<int32_t> dense2_out_int32(200, 0);
+		vector<uint8_t> dense2_out_unint8(200, 0);
 
 		begin = std::chrono::high_resolution_clock::now(); // Start measuring time
 
 
-		dense2_weights = dense_weights("/local/jupyter/cpre482x-lab1/Inference/Template_Visual_Studio/Test_Input0/dense2_weights.bin", 256, 200);
-		dense2_biases = get_biases("/local/jupyter/cpre482x-lab1/Inference/Template_Visual_Studio/Test_Input0/dense2_biases.bin", 200);
+		dense2_weights = dense_weights_int8("/local/jupyter/cpre482x-lab1/Inference/Template_Visual_Studio/Test_Input0/dense2_weights.bin", 256, 200);
+		dense2_biases = get_biases_int32("/local/jupyter/cpre482x-lab1/Inference/Template_Visual_Studio/Test_Input0/dense2_biases.bin", 200);
 
+
+		dense2_out_unint8=  next_dense_uint8_input(dequantized_dense1);
 		// Second Dense Layer Output
-		dense2_out = ofmap_gen_dense(dense1_out, dense2_weights, dense2_biases, 200, true);
+		dense2_out_int32 = ofmap_gen_dense_int32(dense2_out_unint8, dense2_weights, dense2_biases, 200, true);
 
 		end = std::chrono::high_resolution_clock::now();	// End measuring time
 		elapsed = std::chrono::duration_cast<std::chrono::nanoseconds>(end-begin);		
 
 		vector<float> test12_inputs = get_biases("/local/jupyter/cpre482x-lab1/Inference/Template_Visual_Studio/Test_Input0/layer_11_output.bin", 200);
 
+		dequantized_dense2 = softmax(dequantized_dense2);
+
 		// Comparison 
 		max_diff = 0;
 		for (i = 0; i < 200; ++i) {
-			curr_diff = fabs(test12_inputs[i] - dense2_out[i]);
+			curr_diff = fabs(test12_inputs[i] - dequantized_dense2[i]);
 			if (curr_diff < epsilon) {
 				// The values are equal
 			}
@@ -853,7 +1006,7 @@ int main() {
 
 	printf("[Iteration: %d] [Time: %.3fs] Complete.\n\n", main_i, time_sum);
 	time_sum_total += time_sum;
-	*/
+	
 	}
 	float average_time_total = time_sum_total / PROFILING_ITERATIONS;
 	printf("Done - Final. [Average Time: %.3fs]\n", average_time_total);
@@ -1178,6 +1331,39 @@ vector<float> ofmap_gen_dense(vector<float>& input_fmap, vector<vector<float> >&
 
 }
 
+vector<int32_t> ofmap_gen_dense_int32(vector<uint8_t>& input_fmap, vector<vector<int8_t> >& weights, vector<int32_t>& bias, int output_size, bool last_layer) {
+	int x = 0;
+	int y = 0;
+	int z = 0;
+
+	vector<int32_t> output(output_size, 0);
+
+	for (x = 0; x < output_size; x++) {
+		for (y = 0; y < weights.size(); y++) {
+			output[x] += input_fmap[y] * weights[y][x];
+		}
+		output[x] += bias[x];
+		if (!last_layer) {
+			if (output[x] < 0) {
+				output[x] = 0;
+			}
+		}
+		switch(layer_count) {
+			case 6:
+				dequantized_dense1[x] = dequantize_element(output[x]);
+				break;
+			case 7:
+				dequantized_dense2[x] = dequantize_element(output[x]);
+				break;
+			default:
+				break;
+		}
+	}
+
+	return output;
+
+}
+
 /*
 Import weights from binary file (1D) and shape into 4D vector.
  */
@@ -1307,6 +1493,33 @@ vector<vector<float> > dense_weights(const char* filename, int x, int y) {
 	return reshaped_weights;
 }
 
+vector<vector<int8_t> > dense_weights_int8(const char* filename, int x, int y) {
+
+	/* Weights Data */
+	float dense_weight[x*y];
+	vector<vector<int8_t> > reshaped_weight(x, vector<int8_t>(y, 0));
+	FILE* ptr_weights = fopen(filename, "rb");  // r for read, b for binary
+	int r2 = fread(dense_weight, sizeof(float), x * y, ptr_weights);
+	printf("Read dense weights: %d\n", r2);
+	fclose(ptr_weights);
+
+	vector<float> abs_dense_weight = find_abs(dense_weight, x*y);
+	float max = find_maximum(abs_dense_weight);
+	scale_weights[layer_count] = (127/max);
+
+	int i = 0;
+	int f = 0;
+	int count = 0;
+
+	for (i = 0; i < x; i++) {
+		for (f = 0; f < y; f++) {
+			reshaped_weight[i][f] = round(scale_weights[layer_count] * dense_weight[count]);
+			count++;
+		}
+	}
+	return reshaped_weight;
+}
+
 /*
  Purpose of this function is to take the intermediate layer outputs that are given to us to compare.
  */
@@ -1339,6 +1552,23 @@ vector<vector<vector<float> > > intermediate_compare_reshape(const char* filenam
 
 vector<float> flatten(vector<vector<vector<float> > >& in_layer) {
 	vector<float> out(in_layer.size() * in_layer[0].size() * in_layer[0][0].size(), 0);
+	int x = 0;
+	int y = 0;
+	int z = 0;
+	int count = 0;
+	for (x = 0; x < (int)in_layer.size(); x++) {
+		for (y = 0; y < (int)in_layer[0].size(); y++) {
+			for (z = 0; z < (int)in_layer[0][0].size(); z++) {
+				out[count] = in_layer[x][y][z];
+				count++;
+			}
+		}
+	}
+	return out;
+}
+
+vector<uint8_t> flatten_uint8(vector<vector<vector<uint8_t> > >& in_layer) {
+	vector<uint8_t> out(in_layer.size() * in_layer[0].size() * in_layer[0][0].size(), 0);
 	int x = 0;
 	int y = 0;
 	int z = 0;
@@ -1415,6 +1645,39 @@ vector<vector<vector<float> > > max_pooling_2D(vector<vector<vector<float> > >& 
 		for (x = 0; x < (int)ofmap_in.size(); x = x + 2) {
 			for (y = 0; y < (int)ofmap_in[0].size(); y = y + 2) {
 				float max = 0;
+				for (x_sec = x; x_sec < x + 2; x_sec++) {
+					for (y_sec = y; y_sec < y + 2; y_sec++) {
+
+						if (ofmap_in[x_sec][y_sec][z] > max) {
+							max = ofmap_in[x_sec][y_sec][z];
+
+						}
+					}
+				}
+				output[x / 2][y / 2][z] = max;
+			}
+		}
+	}
+
+	return output;
+}
+
+/*
+Performs 2D max pooling (i.e. on each output channel).
+ */
+vector<vector<vector<uint8_t> > > max_pooling_2D_uint8(vector<vector<vector<uint8_t> > >& ofmap_in) {
+	int x = 0;		/* Length ofmap_in */
+	int y = 0;		/* Height ofmap_in */
+	int z = 0;		/* Channel ofmap_in */
+	int x_sec = 0;
+	int y_sec = 0;
+
+	vector<vector<vector<uint8_t> > > output(ofmap_in.size() / 2, vector<vector<uint8_t> >(ofmap_in[0].size() / 2, vector<uint8_t>(ofmap_in[0][0].size(), 0)));
+
+	for (z = 0; z < (int)ofmap_in[0][0].size(); z++) {
+		for (x = 0; x < (int)ofmap_in.size(); x = x + 2) {
+			for (y = 0; y < (int)ofmap_in[0].size(); y = y + 2) {
+				uint8_t max = 0;
 				for (x_sec = x; x_sec < x + 2; x_sec++) {
 					for (y_sec = y; y_sec < y + 2; y_sec++) {
 
