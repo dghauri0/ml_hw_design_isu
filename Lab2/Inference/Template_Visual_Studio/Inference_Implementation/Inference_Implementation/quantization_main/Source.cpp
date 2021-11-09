@@ -24,7 +24,7 @@
 
 using namespace std;
 
-int debug_flag = 0;
+int debug_flag = 69;
 int part = 0;
 int layer_count = 0;
 
@@ -70,9 +70,9 @@ vector<float> find_abs_dense(vector<float> &input);
 vector<uint8_t> next_dense_uint8_input(vector<float> &input);
 
 // Scale Vectors (6 CONV layers, 2 DENSE layers)
-vector<float> scale_weights(8 , 0);
-vector<float> scale_input(8, 0);
-vector<float> scale_biases(8, 0);
+vector<float> scale_weights(12 , 0);
+vector<float> scale_input(12, 0);
+vector<float> scale_biases(12, 0);
 
 // Dequantize Vectors (6 CONV layers, 2 DENSE layers)
 vector<vector<vector<float> > > dequantized_conv1(60, vector<vector<float> >(60, vector<float>(32, 0))); // CONV 1
@@ -246,7 +246,7 @@ vector<uint8_t> next_dense_uint8_input(vector<float> &input) {
 int main() {  
 
 	//to sent output to text file uncomment next line
-	//freopen("out.txt","w",stdout);
+	freopen("out.txt","w",stdout);
 
 	float time_sum_total = 0;
 
@@ -283,8 +283,9 @@ int main() {
 
 		// First Convolutional Layer Output
 		conv1_out = ofmap_gen_conv_int32(conv1_image, conv1_weights, conv1_biases);
-		layer_count++; // important. do in this order.
+		layer_count++;
 		conv1_out_uint8 = next_conv_uint8_input(dequantized_conv1);
+
 		
 		auto end = std::chrono::high_resolution_clock::now();	// End measuring time
 		auto elapsed = std::chrono::duration_cast<std::chrono::nanoseconds>(end-begin);
@@ -308,7 +309,7 @@ int main() {
 				}
 			}
 		}
-
+		
 		//printf("conv1out_threaded: %f\n", conv1_out_threaded[0][0][0]);
 
 		//for (t_i = 0; t_i < MAX_THREAD; t_i++) { 
@@ -381,11 +382,14 @@ int main() {
 
 		// Second Convlolutional Layer Output
 
+		printf("Conv1 UInt: %" PRIu8 "\n",conv1_out_uint8[0][0][0]);
+
 		//conv2_out_tiled = ofmap_gen_conv2_tiling(conv1_out, conv2_weights, conv2_biases, 32);
 		conv2_out = ofmap_gen_conv_int32(conv1_out_uint8, conv2_weights, conv2_biases);
 		layer_count++;
 		conv2_out_uint8 = next_conv_uint8_input(dequantized_conv2);
 		
+
 		end = std::chrono::high_resolution_clock::now();	// End measuring time
 		elapsed = std::chrono::duration_cast<std::chrono::nanoseconds>(end-begin);
 
@@ -400,6 +404,8 @@ int main() {
 		
 		vector<vector<vector<float> > > test2_inputs = intermediate_compare_reshape("/local/jupyter/cpre482x-lab1/Inference/Template_Visual_Studio/Test_Input0/layer_1_output.bin", 56, 56, 32);
 
+
+		epsilon = 0.2f;
 		// Comparison 
 		max_diff = 0;
 		for (k = 0; k < 32; ++k) {
@@ -435,17 +441,20 @@ int main() {
 		
 		vector<vector<vector<uint8_t> > > pooling_out1_uint8(28, vector<vector<uint8_t> >(28, vector<uint8_t>(32, 0)));
 		vector<vector<vector<float> > > pooling_out1_float(28, vector<vector<float> >(28, vector<float>(32, 0)));
+		
 
 		begin = std::chrono::high_resolution_clock::now(); // Start measuring time
 		
 		pooling_out1_uint8 = max_pooling_2D_uint8(conv2_out_uint8);
+
 		
 		end = std::chrono::high_resolution_clock::now();	// End measuring time
 		elapsed = std::chrono::duration_cast<std::chrono::nanoseconds>(end-begin);
 
-		layer_count--;
+	
 		pooling_out1_float = pooling_convert_to_float(pooling_out1_uint8);
 		layer_count++;
+		next_conv_uint8_input(pooling_out1_float);
 
 		vector<vector<vector<float> > > test3_inputs = intermediate_compare_reshape("/local/jupyter/cpre482x-lab1/Inference/Template_Visual_Studio/Test_Input0/layer_2_output.bin", 28, 28, 32);
 
@@ -576,6 +585,7 @@ int main() {
 		layer_count++;
 		conv4_out_uint8 = next_conv_uint8_input(dequantized_conv4);
 		//conv4_out_threaded = *conv4_struct->output;
+		
 
 		end = std::chrono::high_resolution_clock::now();	// End measuring time
 		elapsed = std::chrono::duration_cast<std::chrono::nanoseconds>(end-begin);
@@ -630,9 +640,10 @@ int main() {
 		end = std::chrono::high_resolution_clock::now();	// End measuring time
 		elapsed = std::chrono::duration_cast<std::chrono::nanoseconds>(end-begin);	
 
-		layer_count--;
+		
 		pooling_out2_float = pooling_convert_to_float(pooling_out2_uint8);
 		layer_count++;
+		next_conv_uint8_input(pooling_out2_float);
 
 		vector<vector<vector<float> > > test6_inputs = intermediate_compare_reshape("/local/jupyter/cpre482x-lab1/Inference/Template_Visual_Studio/Test_Input0/layer_5_output.bin", 12, 12, 64);
 
@@ -688,17 +699,17 @@ int main() {
 
 		begin = std::chrono::high_resolution_clock::now(); // Start measuring time
 
-		conv5_weights = conv_weights_int8("/local/jupyter/cpre482x-lab1/Inference/Template_Visual_Studio/Test_Input0/conv4_weights.bin", 3, 3, 64, 64);
+		printf("Layer count @ CONV 5 is: %d\n", layer_count);
+		conv5_weights = conv_weights_int8("/local/jupyter/cpre482x-lab1/Inference/Template_Visual_Studio/Test_Input0/conv5_weights.bin", 3, 3, 64, 64);
 		compute_scale_biases(layer_count);
-		conv5_biases = get_biases_int32("/local/jupyter/cpre482x-lab1/Inference/Template_Visual_Studio/Test_Input0/conv4_biases.bin", 64);
-		layer_count++;
-		
+		conv5_biases = get_biases_int32("/local/jupyter/cpre482x-lab1/Inference/Template_Visual_Studio/Test_Input0/conv5_biases.bin", 64);
 
 		// Fifth Convlolutional Layer Output 
 		conv5_out = ofmap_gen_conv_int32(pooling_out2_uint8, conv5_weights, conv5_biases);
 		layer_count++;
 		conv5_out_uint8 = next_conv_uint8_input(dequantized_conv5);
 		//conv5_out_threaded = *conv5_struct->output;
+		
 
 
 		end = std::chrono::high_resolution_clock::now();	// End measuring time
@@ -765,6 +776,7 @@ int main() {
 		conv6_out = ofmap_gen_conv_int32(conv5_out_uint8, conv6_weights, conv6_biases);
 		layer_count++;
 		conv6_out_uint8 = next_conv_uint8_input(dequantized_conv6);
+		
 		//conv6_out_threaded = *conv6_struct->output;
 		
 
@@ -821,9 +833,10 @@ int main() {
 		end = std::chrono::high_resolution_clock::now();	// End measuring time
 		elapsed = std::chrono::duration_cast<std::chrono::nanoseconds>(end-begin);
 
-		layer_count--;
+		
 		pooling_out3_float = pooling_convert_to_float(pooling_out3_uint8);
 		layer_count++;
+		next_conv_uint8_input(pooling_out3_float);
 
 		vector<vector<vector<float> > > test9_inputs = intermediate_compare_reshape("/local/jupyter/cpre482x-lab1/Inference/Template_Visual_Studio/Test_Input0/layer_8_output.bin", 4, 4, 128);
 
@@ -879,9 +892,13 @@ int main() {
 		end = std::chrono::high_resolution_clock::now();	// End measuring time
 		elapsed = std::chrono::duration_cast<std::chrono::nanoseconds>(end-begin);
 
-		layer_count--;
 		flat_float = flatten_convert_to_float(flat);
 		layer_count++;
+		
+		vector<float> flat_float_abs(4 * 4 * 128, 0);
+		flat_float_abs = find_abs_dense(flat_float);
+		float max = find_maximum(flat_float_abs);
+		scale_input[layer_count] = (255/max);
 
 		vector<float> test10_inputs = get_biases("/local/jupyter/cpre482x-lab1/Inference/Template_Visual_Studio/Test_Input0/layer_9_output.bin", 4 * 4 * 128);
 
@@ -919,8 +936,12 @@ int main() {
 
 
 		dense1_weights = dense_weights_int8("/local/jupyter/cpre482x-lab1/Inference/Template_Visual_Studio/Test_Input0/dense1_weights.bin", 2048, 256);
+		compute_scale_biases(layer_count);
 		dense1_biases = get_biases_int32("/local/jupyter/cpre482x-lab1/Inference/Template_Visual_Studio/Test_Input0/dense1_biases.bin", 256);
 
+		printf("scale biases Dense layer: %f\n", scale_biases[layer_count]);
+		printf("scale weights Dense layer: %f\n", scale_weights[layer_count]);
+		printf("scale input Dense layer: %f\n", scale_input[layer_count]);
 		// First Dense Layer Output 
 		dense1_out_int32 = ofmap_gen_dense_int32(flat, dense1_weights, dense1_biases, 256, false);
 
@@ -931,7 +952,6 @@ int main() {
 
 		vector<float> test11_inputs = get_biases("/local/jupyter/cpre482x-lab1/Inference/Template_Visual_Studio/Test_Input0/layer_10_output.bin", 256);
 
-		dequantized_dense1 = softmax(dequantized_dense1);
 
 		// Comparison 
 		max_diff = 0;
@@ -1007,6 +1027,14 @@ int main() {
 	printf("[Iteration: %d] [Time: %.3fs] Complete.\n\n", main_i, time_sum);
 	time_sum_total += time_sum;
 	
+	if (debug_flag == 69) {
+		for (r = 0; r < 12; r++) {
+			printf("Layer %d scaled_weights: %f.\n", r, scale_weights[r]);
+			printf("Layer %d scaled_input: %f.\n", r, scale_input[r]);
+			printf("Layer %d scaled_biases: %f.\n", r, scale_biases[r]);
+		} 
+	}
+
 	}
 	float average_time_total = time_sum_total / PROFILING_ITERATIONS;
 	printf("Done - Final. [Average Time: %.3fs]\n", average_time_total);
@@ -1267,6 +1295,7 @@ vector<vector<vector<int32_t> > > ofmap_gen_conv_int32(const vector<vector<vecto
 						}
 					}
 				}
+
 				output[x][y][filter] = sum + bias[filter];
 				sum = 0;
 
@@ -1282,16 +1311,16 @@ vector<vector<vector<int32_t> > > ofmap_gen_conv_int32(const vector<vector<vecto
 					case 1:
 						dequantized_conv2[x][y][filter] = dequantize_element(output[x][y][filter]);
 						break;
-					case 2:
+					case 3:
 						dequantized_conv3[x][y][filter] = dequantize_element(output[x][y][filter]);
 						break;
-					case 3:
+					case 4:
 						dequantized_conv4[x][y][filter] = dequantize_element(output[x][y][filter]);
 						break;
-					case 4:
+					case 6:
 						dequantized_conv5[x][y][filter] = dequantize_element(output[x][y][filter]);
 						break;
-					case 5:
+					case 7:
 						dequantized_conv6[x][y][filter] = dequantize_element(output[x][y][filter]);
 						break;
 					default:
@@ -1349,19 +1378,17 @@ vector<int32_t> ofmap_gen_dense_int32(vector<uint8_t>& input_fmap, vector<vector
 			}
 		}
 		switch(layer_count) {
-			case 6:
+			case 10:
 				dequantized_dense1[x] = dequantize_element(output[x]);
 				break;
-			case 7:
+			case 11:
 				dequantized_dense2[x] = dequantize_element(output[x]);
 				break;
 			default:
 				break;
 		}
 	}
-
 	return output;
-
 }
 
 /*
@@ -1608,7 +1635,7 @@ vector<float> get_biases(const char* filename, int x) {
 }
 
 /*
- Import biases from binary file.
+ Import biases from binary file.0;
  */
 vector<int32_t> get_biases_int32(const char* filename, int x) {
 
