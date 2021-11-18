@@ -18,6 +18,7 @@ library work;
 library IEEE;
 use IEEE.std_logic_1164.all;
 use IEEE.numeric_std.all;
+use std.textio.all;
 
 entity staged_mac is
   generic(
@@ -56,7 +57,7 @@ architecture mixed of staged_mac is
     signal state : STATE_TYPE;
 	
 	-- Debug signals, make sure we aren't going crazy
-    signal mac_debug : std_logic_vector(31 downto 0);
+    signal mac_debug : std_logic_vector(31 downto 0) := x"00000000";
 
 
     -- N-bit register component declaration
@@ -102,7 +103,7 @@ begin
 
 	
 	-- Debug Signals
-    mac_debug <= x"00000000";  -- Double checking sanity    
+    --mac_debug <= x"00000000";  -- Double checking sanity    
     
    process (ACLK) is
    begin 
@@ -118,8 +119,14 @@ begin
             when WAIT_FOR_VALUES =>
                 -- Wait here until we recieve valid values
                 SD_AXIS_TREADY <= '1';
+                --report "Here";
+                --state <= PROCESSING_VALUES;
                 if(SD_AXIS_TVALID) then
+                    report "Here";
                     state <= PROCESSING_VALUES;
+                elsif(not SD_AXIS_TVALID) then
+                    report "NOT Here";
+                    --state <= WAIT_FOR_VALUES;
                 end if;
 
 			-- Other stages go here	
@@ -136,8 +143,12 @@ begin
                 MULT <= std_logic_vector(signed(A) * signed(B));
                 mult_add <= std_logic_vector(signed(MULT(C_DATA_WIDTH-1 downto 0)) + signed(accumulate)); --Take first 32 bits of MULT to truncate and prevent overflow
                
-                if(SD_AXIS_TLAST) then
+                if(SD_AXIS_TLAST and MO_AXIS_TREADY) then
+                    SD_AXIS_TREADY <= '0';
                     state <= SENDING_DATA;
+                elsif (SD_AXIS_TLAST and not MO_AXIS_TREADY) then
+                    SD_AXIS_TREADY <= '0';
+                    state <= WAITING_TO_SEND_VALUES;
                 elsif (not SD_AXIS_TLAST) then
                     state <= PROCESSING_VALUES;
                 end if;

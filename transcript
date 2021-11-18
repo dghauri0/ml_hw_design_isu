@@ -199,3 +199,532 @@ do tb_staged_mac.do
 # This port will contribute value (U) to the signal network.
 # ** Warning: (vsim-8683) Uninitialized out port /tb_staged_mac/DUT0/MO_AXIS_TID(7 downto 0) has no driver.
 # This port will contribute value (8'hXX) to the signal network.
+vcom -reportprogress 300 -work work /home/dghauri/ClassFiles/482X/CPRE482X/Lab3/Fixed_Point_MAC/staged_mac_template.vhd
+# QuestaSim-64 vcom 2021.2 Compiler 2021.04 Apr 14 2021
+# Start time: 21:01:56 on Nov 17,2021
+# vcom -reportprogress 300 -work work /home/dghauri/ClassFiles/482X/CPRE482X/Lab3/Fixed_Point_MAC/staged_mac_template.vhd 
+# -- Loading package STANDARD
+# -- Loading package TEXTIO
+# -- Loading package std_logic_1164
+# -- Loading package NUMERIC_STD
+# -- Compiling entity staged_mac
+# -- Compiling architecture mixed of staged_mac
+# End time: 21:01:56 on Nov 17,2021, Elapsed time: 0:00:00
+# Errors: 0, Warnings: 0
+vcom -reportprogress 300 -work work /home/dghauri/ClassFiles/482X/CPRE482X/Lab3/Fixed_Point_MAC/staged_mac_template.vhd
+# QuestaSim-64 vcom 2021.2 Compiler 2021.04 Apr 14 2021
+# Start time: 21:02:01 on Nov 17,2021
+# vcom -reportprogress 300 -work work /home/dghauri/ClassFiles/482X/CPRE482X/Lab3/Fixed_Point_MAC/staged_mac_template.vhd 
+# -- Loading package STANDARD
+# -- Loading package TEXTIO
+# -- Loading package std_logic_1164
+# -- Loading package NUMERIC_STD
+# -- Compiling entity staged_mac
+# -- Compiling architecture mixed of staged_mac
+# End time: 21:02:01 on Nov 17,2021, Elapsed time: 0:00:00
+# Errors: 0, Warnings: 0
+vcom -reportprogress 300 -work work /home/dghauri/ClassFiles/482X/CPRE482X/Lab3/Fixed_Point_MAC/tb_staged_mac.vhd
+# QuestaSim-64 vcom 2021.2 Compiler 2021.04 Apr 14 2021
+# Start time: 21:02:02 on Nov 17,2021
+# vcom -reportprogress 300 -work work /home/dghauri/ClassFiles/482X/CPRE482X/Lab3/Fixed_Point_MAC/tb_staged_mac.vhd 
+# -- Loading package STANDARD
+# -- Loading package TEXTIO
+# -- Loading package std_logic_1164
+# -- Loading package std_logic_textio
+# -- Loading package ENV
+# -- Compiling entity tb_staged_mac
+# -- Compiling architecture mixed of tb_staged_mac
+# End time: 21:02:02 on Nov 17,2021, Elapsed time: 0:00:00
+# Errors: 0, Warnings: 0
+quit -sim
+# End time: 21:02:07 on Nov 17,2021, Elapsed time: 0:15:54
+# Errors: 0, Warnings: 2
+do tb_staged_mac.do
+# vsim -voptargs="+acc" work.tb_staged_mac 
+# Start time: 21:02:10 on Nov 17,2021
+# ** Note: (vsim-3813) Design is being optimized due to module recompilation...
+# ** Note: (vopt-143) Recognized 1 FSM in architecture body "staged_mac(mixed)".
+# Loading std.standard
+# Loading std.textio(body)
+# Loading ieee.std_logic_1164(body)
+# Loading ieee.std_logic_textio(body)
+# Loading std.env(body)
+# Loading work.tb_staged_mac(mixed)#1
+# Loading ieee.numeric_std(body)
+# Loading work.staged_mac(mixed)#1
+# Loading work.dffg(mixed)#1
+# ** Warning: (vsim-8683) Uninitialized out port /tb_staged_mac/DUT0/MO_AXIS_TLAST has no driver.
+# This port will contribute value (U) to the signal network.
+# ** Warning: (vsim-8683) Uninitialized out port /tb_staged_mac/DUT0/MO_AXIS_TID(7 downto 0) has no driver.
+# This port will contribute value (8'hXX) to the signal network.
+vcom -reportprogress 300 -work work /home/dghauri/ClassFiles/482X/CPRE482X/Lab3/Fixed_Point_MAC/tb_staged_mac.vhd
+# QuestaSim-64 vcom 2021.2 Compiler 2021.04 Apr 14 2021
+# Start time: 21:02:37 on Nov 17,2021
+# vcom -reportprogress 300 -work work /home/dghauri/ClassFiles/482X/CPRE482X/Lab3/Fixed_Point_MAC/tb_staged_mac.vhd 
+# -- Loading package STANDARD
+# -- Loading package TEXTIO
+# -- Loading package std_logic_1164
+# -- Loading package std_logic_textio
+# -- Loading package ENV
+# -- Compiling entity tb_staged_mac
+# -- Compiling architecture mixed of tb_staged_mac
+# ** Error: /home/dghauri/ClassFiles/482X/CPRE482X/Lab3/Fixed_Point_MAC/tb_staged_mac.vhd(142): Illegal target for signal assignment.
+# ** Error: /home/dghauri/ClassFiles/482X/CPRE482X/Lab3/Fixed_Point_MAC/tb_staged_mac.vhd(142): (vcom-1136) Unknown identifier "SD_AXIS_TDATA".
+# ** Error: /home/dghauri/ClassFiles/482X/CPRE482X/Lab3/Fixed_Point_MAC/tb_staged_mac.vhd(145): Illegal target for signal assignment.
+# ** Error: /home/dghauri/ClassFiles/482X/CPRE482X/Lab3/Fixed_Point_MAC/tb_staged_mac.vhd(145): (vcom-1136) Unknown identifier "SD_AXIS_TVALID".
+# ** Error: /home/dghauri/ClassFiles/482X/CPRE482X/Lab3/Fixed_Point_MAC/tb_staged_mac.vhd(148): Illegal target for signal assignment.
+# ** Error: /home/dghauri/ClassFiles/482X/CPRE482X/Lab3/Fixed_Point_MAC/tb_staged_mac.vhd(148): (vcom-1136) Unknown identifier "SD_AXIS_TLAST".
+# ** Error: /home/dghauri/ClassFiles/482X/CPRE482X/Lab3/Fixed_Point_MAC/tb_staged_mac.vhd(151): Illegal target for signal assignment.
+# ** Error: /home/dghauri/ClassFiles/482X/CPRE482X/Lab3/Fixed_Point_MAC/tb_staged_mac.vhd(151): (vcom-1136) Unknown identifier "SD_AXIS_TLAST".
+# ** Note: /home/dghauri/ClassFiles/482X/CPRE482X/Lab3/Fixed_Point_MAC/tb_staged_mac.vhd(161): VHDL Compiler exiting
+# End time: 21:02:38 on Nov 17,2021, Elapsed time: 0:00:01
+# Errors: 8, Warnings: 0
+vcom -reportprogress 300 -work work /home/dghauri/ClassFiles/482X/CPRE482X/Lab3/Fixed_Point_MAC/tb_staged_mac.vhd
+# QuestaSim-64 vcom 2021.2 Compiler 2021.04 Apr 14 2021
+# Start time: 21:02:53 on Nov 17,2021
+# vcom -reportprogress 300 -work work /home/dghauri/ClassFiles/482X/CPRE482X/Lab3/Fixed_Point_MAC/tb_staged_mac.vhd 
+# -- Loading package STANDARD
+# -- Loading package TEXTIO
+# -- Loading package std_logic_1164
+# -- Loading package std_logic_textio
+# -- Loading package ENV
+# -- Compiling entity tb_staged_mac
+# -- Compiling architecture mixed of tb_staged_mac
+# End time: 21:02:53 on Nov 17,2021, Elapsed time: 0:00:00
+# Errors: 0, Warnings: 0
+quit -sim
+# End time: 21:02:56 on Nov 17,2021, Elapsed time: 0:00:46
+# Errors: 0, Warnings: 2
+do tb_staged_mac.do
+# vsim -voptargs="+acc" work.tb_staged_mac 
+# Start time: 21:02:58 on Nov 17,2021
+# ** Note: (vsim-3813) Design is being optimized due to module recompilation...
+# Loading std.standard
+# Loading std.textio(body)
+# Loading ieee.std_logic_1164(body)
+# Loading ieee.std_logic_textio(body)
+# Loading std.env(body)
+# Loading work.tb_staged_mac(mixed)#1
+# Loading ieee.numeric_std(body)
+# Loading work.staged_mac(mixed)#1
+# Loading work.dffg(mixed)#1
+# ** Warning: (vsim-8683) Uninitialized out port /tb_staged_mac/DUT0/MO_AXIS_TLAST has no driver.
+# This port will contribute value (U) to the signal network.
+# ** Warning: (vsim-8683) Uninitialized out port /tb_staged_mac/DUT0/MO_AXIS_TID(7 downto 0) has no driver.
+# This port will contribute value (8'hXX) to the signal network.
+vcom -reportprogress 300 -work work /home/dghauri/ClassFiles/482X/CPRE482X/Lab3/Fixed_Point_MAC/staged_mac_template.vhd
+# QuestaSim-64 vcom 2021.2 Compiler 2021.04 Apr 14 2021
+# Start time: 21:06:41 on Nov 17,2021
+# vcom -reportprogress 300 -work work /home/dghauri/ClassFiles/482X/CPRE482X/Lab3/Fixed_Point_MAC/staged_mac_template.vhd 
+# -- Loading package STANDARD
+# -- Loading package TEXTIO
+# -- Loading package std_logic_1164
+# -- Loading package NUMERIC_STD
+# -- Compiling entity staged_mac
+# -- Compiling architecture mixed of staged_mac
+# End time: 21:06:41 on Nov 17,2021, Elapsed time: 0:00:00
+# Errors: 0, Warnings: 0
+vcom -reportprogress 300 -work work /home/dghauri/ClassFiles/482X/CPRE482X/Lab3/Fixed_Point_MAC/tb_staged_mac.vhd
+# QuestaSim-64 vcom 2021.2 Compiler 2021.04 Apr 14 2021
+# Start time: 21:06:43 on Nov 17,2021
+# vcom -reportprogress 300 -work work /home/dghauri/ClassFiles/482X/CPRE482X/Lab3/Fixed_Point_MAC/tb_staged_mac.vhd 
+# -- Loading package STANDARD
+# -- Loading package TEXTIO
+# -- Loading package std_logic_1164
+# -- Loading package std_logic_textio
+# -- Loading package ENV
+# -- Compiling entity tb_staged_mac
+# -- Compiling architecture mixed of tb_staged_mac
+# End time: 21:06:43 on Nov 17,2021, Elapsed time: 0:00:00
+# Errors: 0, Warnings: 0
+quit -sim
+# End time: 21:06:46 on Nov 17,2021, Elapsed time: 0:03:48
+# Errors: 0, Warnings: 2
+do tb_staged_mac.do
+# vsim -voptargs="+acc" work.tb_staged_mac 
+# Start time: 21:06:48 on Nov 17,2021
+# ** Note: (vsim-3813) Design is being optimized due to module recompilation...
+# ** Note: (vopt-143) Recognized 1 FSM in architecture body "staged_mac(mixed)".
+# Loading std.standard
+# Loading std.textio(body)
+# Loading ieee.std_logic_1164(body)
+# Loading ieee.std_logic_textio(body)
+# Loading std.env(body)
+# Loading work.tb_staged_mac(mixed)#1
+# Loading ieee.numeric_std(body)
+# Loading work.staged_mac(mixed)#1
+# Loading work.dffg(mixed)#1
+# ** Warning: (vsim-8683) Uninitialized out port /tb_staged_mac/DUT0/MO_AXIS_TLAST has no driver.
+# This port will contribute value (U) to the signal network.
+# ** Warning: (vsim-8683) Uninitialized out port /tb_staged_mac/DUT0/MO_AXIS_TID(7 downto 0) has no driver.
+# This port will contribute value (8'hXX) to the signal network.
+vcom -reportprogress 300 -work work /home/dghauri/ClassFiles/482X/CPRE482X/Lab3/Fixed_Point_MAC/staged_mac_template.vhd
+# QuestaSim-64 vcom 2021.2 Compiler 2021.04 Apr 14 2021
+# Start time: 21:07:17 on Nov 17,2021
+# vcom -reportprogress 300 -work work /home/dghauri/ClassFiles/482X/CPRE482X/Lab3/Fixed_Point_MAC/staged_mac_template.vhd 
+# -- Loading package STANDARD
+# -- Loading package TEXTIO
+# -- Loading package std_logic_1164
+# -- Loading package NUMERIC_STD
+# -- Compiling entity staged_mac
+# -- Compiling architecture mixed of staged_mac
+# End time: 21:07:17 on Nov 17,2021, Elapsed time: 0:00:00
+# Errors: 0, Warnings: 0
+quit -sim
+# End time: 21:07:20 on Nov 17,2021, Elapsed time: 0:00:32
+# Errors: 0, Warnings: 2
+do tb_staged_mac.do
+# vsim -voptargs="+acc" work.tb_staged_mac 
+# Start time: 21:07:21 on Nov 17,2021
+# ** Note: (vsim-3813) Design is being optimized due to module recompilation...
+# ** Note: (vopt-143) Recognized 1 FSM in architecture body "staged_mac(mixed)".
+# Loading std.standard
+# Loading std.textio(body)
+# Loading ieee.std_logic_1164(body)
+# Loading ieee.std_logic_textio(body)
+# Loading std.env(body)
+# Loading work.tb_staged_mac(mixed)#1
+# Loading ieee.numeric_std(body)
+# Loading work.staged_mac(mixed)#1
+# Loading work.dffg(mixed)#1
+# ** Warning: (vsim-8683) Uninitialized out port /tb_staged_mac/DUT0/MO_AXIS_TLAST has no driver.
+# This port will contribute value (U) to the signal network.
+# ** Warning: (vsim-8683) Uninitialized out port /tb_staged_mac/DUT0/MO_AXIS_TID(7 downto 0) has no driver.
+# This port will contribute value (8'hXX) to the signal network.
+vcom -reportprogress 300 -work work /home/dghauri/ClassFiles/482X/CPRE482X/Lab3/Fixed_Point_MAC/staged_mac_template.vhd
+# QuestaSim-64 vcom 2021.2 Compiler 2021.04 Apr 14 2021
+# Start time: 21:08:02 on Nov 17,2021
+# vcom -reportprogress 300 -work work /home/dghauri/ClassFiles/482X/CPRE482X/Lab3/Fixed_Point_MAC/staged_mac_template.vhd 
+# -- Loading package STANDARD
+# -- Loading package TEXTIO
+# -- Loading package std_logic_1164
+# -- Loading package NUMERIC_STD
+# -- Compiling entity staged_mac
+# -- Compiling architecture mixed of staged_mac
+# End time: 21:08:03 on Nov 17,2021, Elapsed time: 0:00:01
+# Errors: 0, Warnings: 0
+quuit -sim
+# invalid command name "quuit"
+quit -sim
+# End time: 21:08:07 on Nov 17,2021, Elapsed time: 0:00:46
+# Errors: 0, Warnings: 2
+do tb_staged_mac.do
+# vsim -voptargs="+acc" work.tb_staged_mac 
+# Start time: 21:08:10 on Nov 17,2021
+# ** Note: (vsim-3813) Design is being optimized due to module recompilation...
+# ** Note: (vopt-143) Recognized 1 FSM in architecture body "staged_mac(mixed)".
+# Loading std.standard
+# Loading std.textio(body)
+# Loading ieee.std_logic_1164(body)
+# Loading ieee.std_logic_textio(body)
+# Loading std.env(body)
+# Loading work.tb_staged_mac(mixed)#1
+# Loading ieee.numeric_std(body)
+# Loading work.staged_mac(mixed)#1
+# Loading work.dffg(mixed)#1
+# ** Warning: (vsim-8683) Uninitialized out port /tb_staged_mac/DUT0/MO_AXIS_TLAST has no driver.
+# This port will contribute value (U) to the signal network.
+# ** Warning: (vsim-8683) Uninitialized out port /tb_staged_mac/DUT0/MO_AXIS_TID(7 downto 0) has no driver.
+# This port will contribute value (8'hXX) to the signal network.
+vcom -reportprogress 300 -work work /home/dghauri/ClassFiles/482X/CPRE482X/Lab3/Fixed_Point_MAC/staged_mac_template.vhd
+# QuestaSim-64 vcom 2021.2 Compiler 2021.04 Apr 14 2021
+# Start time: 21:11:28 on Nov 17,2021
+# vcom -reportprogress 300 -work work /home/dghauri/ClassFiles/482X/CPRE482X/Lab3/Fixed_Point_MAC/staged_mac_template.vhd 
+# -- Loading package STANDARD
+# -- Loading package TEXTIO
+# -- Loading package std_logic_1164
+# -- Loading package NUMERIC_STD
+# -- Compiling entity staged_mac
+# -- Compiling architecture mixed of staged_mac
+# ** Error: /home/dghauri/ClassFiles/482X/CPRE482X/Lab3/Fixed_Point_MAC/staged_mac_template.vhd(122): (vcom-1600) No feasible entries for subprogram "WRITE".
+#    Visible subprograms are:
+#       (explicit) NUMERIC_STD.WRITE[std.TEXTIO.LINE, UNRESOLVED_UNSIGNED, std.TEXTIO.SIDE, NATURAL] at vhdl_src/ieee/mti_numeric_std.vhd(2082)
+#       (explicit) NUMERIC_STD.WRITE[std.TEXTIO.LINE, UNRESOLVED_SIGNED, std.TEXTIO.SIDE, NATURAL] at vhdl_src/ieee/mti_numeric_std.vhd(2085)
+#       (explicit) std_logic_1164.WRITE[std.TEXTIO.LINE, STD_ULOGIC, std.TEXTIO.SIDE, NATURAL] at $MODEL_TECH/../vhdl_src/ieee/stdlogic.vhd(277)
+#       (explicit) std_logic_1164.WRITE[std.TEXTIO.LINE, STD_ULOGIC_VECTOR, std.TEXTIO.SIDE, NATURAL] at $MODEL_TECH/../vhdl_src/ieee/stdlogic.vhd(280)
+# ** Note: /home/dghauri/ClassFiles/482X/CPRE482X/Lab3/Fixed_Point_MAC/staged_mac_template.vhd(181): VHDL Compiler exiting
+# End time: 21:11:29 on Nov 17,2021, Elapsed time: 0:00:01
+# Errors: 1, Warnings: 0
+vcom -reportprogress 300 -work work /home/dghauri/ClassFiles/482X/CPRE482X/Lab3/Fixed_Point_MAC/staged_mac_template.vhd
+# QuestaSim-64 vcom 2021.2 Compiler 2021.04 Apr 14 2021
+# Start time: 21:11:58 on Nov 17,2021
+# vcom -reportprogress 300 -work work /home/dghauri/ClassFiles/482X/CPRE482X/Lab3/Fixed_Point_MAC/staged_mac_template.vhd 
+# -- Loading package STANDARD
+# -- Loading package TEXTIO
+# -- Loading package std_logic_1164
+# -- Loading package NUMERIC_STD
+# -- Compiling entity staged_mac
+# -- Compiling architecture mixed of staged_mac
+# ** Error: /home/dghauri/ClassFiles/482X/CPRE482X/Lab3/Fixed_Point_MAC/staged_mac_template.vhd(123): (vcom-1600) No feasible entries for subprogram "write".
+#    Visible subprograms are:
+#       (implicit) TEXTIO.write[std.TEXTIO.TEXT, std.STANDARD.STRING] at vhdl_src/std/textio.vhd(15)
+#       (explicit) TEXTIO.WRITE[std.TEXTIO.LINE, BIT, std.TEXTIO.SIDE, NATURAL] at vhdl_src/std/textio.vhd(123)
+#       (explicit) TEXTIO.WRITE[std.TEXTIO.LINE, BIT_VECTOR, std.TEXTIO.SIDE, NATURAL] at vhdl_src/std/textio.vhd(126)
+#       (explicit) TEXTIO.WRITE[std.TEXTIO.LINE, BOOLEAN, std.TEXTIO.SIDE, NATURAL] at vhdl_src/std/textio.vhd(129)
+#       (explicit) TEXTIO.WRITE[std.TEXTIO.LINE, std.STANDARD.CHARACTER, std.TEXTIO.SIDE, NATURAL] at vhdl_src/std/textio.vhd(132)
+#       (explicit) TEXTIO.WRITE[std.TEXTIO.LINE, INTEGER, std.TEXTIO.SIDE, NATURAL] at vhdl_src/std/textio.vhd(135)
+#       (explicit) TEXTIO.WRITE[std.TEXTIO.LINE, std.STANDARD.REAL, std.TEXTIO.SIDE, NATURAL, NATURAL] at vhdl_src/std/textio.vhd(138)
+#       (explicit) TEXTIO.WRITE[std.TEXTIO.LINE, std.STANDARD.REAL, std.STANDARD.STRING] at vhdl_src/std/textio.vhd(142)
+#       (explicit) TEXTIO.WRITE[std.TEXTIO.LINE, std.STANDARD.STRING, std.TEXTIO.SIDE, NATURAL] at vhdl_src/std/textio.vhd(145)
+#       (explicit) TEXTIO.WRITE[std.TEXTIO.LINE, std.STANDARD.TIME, std.TEXTIO.SIDE, NATURAL, std.STANDARD.TIME] at vhdl_src/std/textio.vhd(148)
+#       (explicit) NUMERIC_STD.WRITE[std.TEXTIO.LINE, UNRESOLVED_UNSIGNED, std.TEXTIO.SIDE, NATURAL] at vhdl_src/ieee/mti_numeric_std.vhd(2082)
+#       (explicit) NUMERIC_STD.WRITE[std.TEXTIO.LINE, UNRESOLVED_SIGNED, std.TEXTIO.SIDE, NATURAL] at vhdl_src/ieee/mti_numeric_std.vhd(2085)
+#       (explicit) std_logic_1164.WRITE[std.TEXTIO.LINE, STD_ULOGIC, std.TEXTIO.SIDE, NATURAL] at $MODEL_TECH/../vhdl_src/ieee/stdlogic.vhd(277)
+#       (explicit) std_logic_1164.WRITE[std.TEXTIO.LINE, STD_ULOGIC_VECTOR, std.TEXTIO.SIDE, NATURAL] at $MODEL_TECH/../vhdl_src/ieee/stdlogic.vhd(280)
+# ** Note: /home/dghauri/ClassFiles/482X/CPRE482X/Lab3/Fixed_Point_MAC/staged_mac_template.vhd(182): VHDL Compiler exiting
+# End time: 21:11:58 on Nov 17,2021, Elapsed time: 0:00:00
+# Errors: 1, Warnings: 0
+vcom -reportprogress 300 -work work /home/dghauri/ClassFiles/482X/CPRE482X/Lab3/Fixed_Point_MAC/staged_mac_template.vhd
+# QuestaSim-64 vcom 2021.2 Compiler 2021.04 Apr 14 2021
+# Start time: 21:12:07 on Nov 17,2021
+# vcom -reportprogress 300 -work work /home/dghauri/ClassFiles/482X/CPRE482X/Lab3/Fixed_Point_MAC/staged_mac_template.vhd 
+# -- Loading package STANDARD
+# -- Loading package TEXTIO
+# -- Loading package std_logic_1164
+# -- Loading package NUMERIC_STD
+# -- Compiling entity staged_mac
+# -- Compiling architecture mixed of staged_mac
+# ** Error: /home/dghauri/ClassFiles/482X/CPRE482X/Lab3/Fixed_Point_MAC/staged_mac_template.vhd(123): (vcom-1600) No feasible entries for subprogram "write".
+#    Visible subprograms are:
+#       (implicit) TEXTIO.write[std.TEXTIO.TEXT, std.STANDARD.STRING] at vhdl_src/std/textio.vhd(15)
+#       (explicit) TEXTIO.WRITE[std.TEXTIO.LINE, BIT, std.TEXTIO.SIDE, NATURAL] at vhdl_src/std/textio.vhd(123)
+#       (explicit) TEXTIO.WRITE[std.TEXTIO.LINE, BIT_VECTOR, std.TEXTIO.SIDE, NATURAL] at vhdl_src/std/textio.vhd(126)
+#       (explicit) TEXTIO.WRITE[std.TEXTIO.LINE, BOOLEAN, std.TEXTIO.SIDE, NATURAL] at vhdl_src/std/textio.vhd(129)
+#       (explicit) TEXTIO.WRITE[std.TEXTIO.LINE, std.STANDARD.CHARACTER, std.TEXTIO.SIDE, NATURAL] at vhdl_src/std/textio.vhd(132)
+#       (explicit) TEXTIO.WRITE[std.TEXTIO.LINE, INTEGER, std.TEXTIO.SIDE, NATURAL] at vhdl_src/std/textio.vhd(135)
+#       (explicit) TEXTIO.WRITE[std.TEXTIO.LINE, std.STANDARD.REAL, std.TEXTIO.SIDE, NATURAL, NATURAL] at vhdl_src/std/textio.vhd(138)
+#       (explicit) TEXTIO.WRITE[std.TEXTIO.LINE, std.STANDARD.REAL, std.STANDARD.STRING] at vhdl_src/std/textio.vhd(142)
+#       (explicit) TEXTIO.WRITE[std.TEXTIO.LINE, std.STANDARD.STRING, std.TEXTIO.SIDE, NATURAL] at vhdl_src/std/textio.vhd(145)
+#       (explicit) TEXTIO.WRITE[std.TEXTIO.LINE, std.STANDARD.TIME, std.TEXTIO.SIDE, NATURAL, std.STANDARD.TIME] at vhdl_src/std/textio.vhd(148)
+#       (explicit) NUMERIC_STD.WRITE[std.TEXTIO.LINE, UNRESOLVED_UNSIGNED, std.TEXTIO.SIDE, NATURAL] at vhdl_src/ieee/mti_numeric_std.vhd(2082)
+#       (explicit) NUMERIC_STD.WRITE[std.TEXTIO.LINE, UNRESOLVED_SIGNED, std.TEXTIO.SIDE, NATURAL] at vhdl_src/ieee/mti_numeric_std.vhd(2085)
+#       (explicit) std_logic_1164.WRITE[std.TEXTIO.LINE, STD_ULOGIC, std.TEXTIO.SIDE, NATURAL] at $MODEL_TECH/../vhdl_src/ieee/stdlogic.vhd(277)
+#       (explicit) std_logic_1164.WRITE[std.TEXTIO.LINE, STD_ULOGIC_VECTOR, std.TEXTIO.SIDE, NATURAL] at $MODEL_TECH/../vhdl_src/ieee/stdlogic.vhd(280)
+# ** Note: /home/dghauri/ClassFiles/482X/CPRE482X/Lab3/Fixed_Point_MAC/staged_mac_template.vhd(182): VHDL Compiler exiting
+# End time: 21:12:07 on Nov 17,2021, Elapsed time: 0:00:00
+# Errors: 1, Warnings: 0
+vcom -reportprogress 300 -work work /home/dghauri/ClassFiles/482X/CPRE482X/Lab3/Fixed_Point_MAC/staged_mac_template.vhd
+# QuestaSim-64 vcom 2021.2 Compiler 2021.04 Apr 14 2021
+# Start time: 21:13:15 on Nov 17,2021
+# vcom -reportprogress 300 -work work /home/dghauri/ClassFiles/482X/CPRE482X/Lab3/Fixed_Point_MAC/staged_mac_template.vhd 
+# -- Loading package STANDARD
+# -- Loading package TEXTIO
+# -- Loading package std_logic_1164
+# -- Loading package NUMERIC_STD
+# -- Compiling entity staged_mac
+# -- Compiling architecture mixed of staged_mac
+# End time: 21:13:15 on Nov 17,2021, Elapsed time: 0:00:00
+# Errors: 0, Warnings: 0
+vcom -reportprogress 300 -work work /home/dghauri/ClassFiles/482X/CPRE482X/Lab3/Fixed_Point_MAC/staged_mac_template.vhd
+# QuestaSim-64 vcom 2021.2 Compiler 2021.04 Apr 14 2021
+# Start time: 21:13:16 on Nov 17,2021
+# vcom -reportprogress 300 -work work /home/dghauri/ClassFiles/482X/CPRE482X/Lab3/Fixed_Point_MAC/staged_mac_template.vhd 
+# -- Loading package STANDARD
+# -- Loading package TEXTIO
+# -- Loading package std_logic_1164
+# -- Loading package NUMERIC_STD
+# -- Compiling entity staged_mac
+# -- Compiling architecture mixed of staged_mac
+# End time: 21:13:16 on Nov 17,2021, Elapsed time: 0:00:00
+# Errors: 0, Warnings: 0
+quit -sim
+# End time: 21:13:22 on Nov 17,2021, Elapsed time: 0:05:12
+# Errors: 0, Warnings: 2
+do tb_staged_mac.do
+# vsim -voptargs="+acc" work.tb_staged_mac 
+# Start time: 21:13:24 on Nov 17,2021
+# ** Note: (vsim-3813) Design is being optimized due to module recompilation...
+# ** Note: (vopt-143) Recognized 1 FSM in architecture body "staged_mac(mixed)".
+# Loading std.standard
+# Loading std.textio(body)
+# Loading ieee.std_logic_1164(body)
+# Loading ieee.std_logic_textio(body)
+# Loading std.env(body)
+# Loading work.tb_staged_mac(mixed)#1
+# Loading ieee.numeric_std(body)
+# Loading work.staged_mac(mixed)#1
+# Loading work.dffg(mixed)#1
+# ** Warning: (vsim-8683) Uninitialized out port /tb_staged_mac/DUT0/MO_AXIS_TLAST has no driver.
+# This port will contribute value (U) to the signal network.
+# ** Warning: (vsim-8683) Uninitialized out port /tb_staged_mac/DUT0/MO_AXIS_TID(7 downto 0) has no driver.
+# This port will contribute value (8'hXX) to the signal network.
+vcom -reportprogress 300 -work work /home/dghauri/ClassFiles/482X/CPRE482X/Lab3/Fixed_Point_MAC/staged_mac_template.vhd
+# QuestaSim-64 vcom 2021.2 Compiler 2021.04 Apr 14 2021
+# Start time: 21:14:08 on Nov 17,2021
+# vcom -reportprogress 300 -work work /home/dghauri/ClassFiles/482X/CPRE482X/Lab3/Fixed_Point_MAC/staged_mac_template.vhd 
+# -- Loading package STANDARD
+# -- Loading package TEXTIO
+# -- Loading package std_logic_1164
+# -- Loading package NUMERIC_STD
+# -- Compiling entity staged_mac
+# -- Compiling architecture mixed of staged_mac
+# End time: 21:14:08 on Nov 17,2021, Elapsed time: 0:00:00
+# Errors: 0, Warnings: 0
+quit -sim
+# End time: 21:14:13 on Nov 17,2021, Elapsed time: 0:00:49
+# Errors: 0, Warnings: 2
+do tb_staged_mac.do
+# vsim -voptargs="+acc" work.tb_staged_mac 
+# Start time: 21:14:14 on Nov 17,2021
+# ** Note: (vsim-3813) Design is being optimized due to module recompilation...
+# ** Note: (vopt-143) Recognized 1 FSM in architecture body "staged_mac(mixed)".
+# Loading std.standard
+# Loading std.textio(body)
+# Loading ieee.std_logic_1164(body)
+# Loading ieee.std_logic_textio(body)
+# Loading std.env(body)
+# Loading work.tb_staged_mac(mixed)#1
+# Loading ieee.numeric_std(body)
+# Loading work.staged_mac(mixed)#1
+# Loading work.dffg(mixed)#1
+# ** Warning: (vsim-8683) Uninitialized out port /tb_staged_mac/DUT0/MO_AXIS_TLAST has no driver.
+# This port will contribute value (U) to the signal network.
+# ** Warning: (vsim-8683) Uninitialized out port /tb_staged_mac/DUT0/MO_AXIS_TID(7 downto 0) has no driver.
+# This port will contribute value (8'hXX) to the signal network.
+# ** Note: The value of 'a' is 
+#    Time: 20 ns  Iteration: 1  Instance: /tb_staged_mac/DUT0
+vcom -reportprogress 300 -work work /home/dghauri/ClassFiles/482X/CPRE482X/Lab3/Fixed_Point_MAC/staged_mac_template.vhd
+# QuestaSim-64 vcom 2021.2 Compiler 2021.04 Apr 14 2021
+# Start time: 21:15:58 on Nov 17,2021
+# vcom -reportprogress 300 -work work /home/dghauri/ClassFiles/482X/CPRE482X/Lab3/Fixed_Point_MAC/staged_mac_template.vhd 
+# -- Loading package STANDARD
+# -- Loading package TEXTIO
+# -- Loading package std_logic_1164
+# -- Loading package NUMERIC_STD
+# -- Compiling entity staged_mac
+# -- Compiling architecture mixed of staged_mac
+# End time: 21:15:58 on Nov 17,2021, Elapsed time: 0:00:00
+# Errors: 0, Warnings: 0
+quit -si
+# unknown switch: -si
+quit -sim
+# End time: 21:16:03 on Nov 17,2021, Elapsed time: 0:01:49
+# Errors: 0, Warnings: 2
+do tb_staged_mac.do
+# vsim -voptargs="+acc" work.tb_staged_mac 
+# Start time: 21:16:05 on Nov 17,2021
+# ** Note: (vsim-3813) Design is being optimized due to module recompilation...
+# ** Note: (vopt-143) Recognized 1 FSM in architecture body "staged_mac(mixed)".
+# Loading std.standard
+# Loading std.textio(body)
+# Loading ieee.std_logic_1164(body)
+# Loading ieee.std_logic_textio(body)
+# Loading std.env(body)
+# Loading work.tb_staged_mac(mixed)#1
+# Loading ieee.numeric_std(body)
+# Loading work.staged_mac(mixed)#1
+# Loading work.dffg(mixed)#1
+# ** Warning: (vsim-8683) Uninitialized out port /tb_staged_mac/DUT0/MO_AXIS_TLAST has no driver.
+# This port will contribute value (U) to the signal network.
+# ** Warning: (vsim-8683) Uninitialized out port /tb_staged_mac/DUT0/MO_AXIS_TID(7 downto 0) has no driver.
+# This port will contribute value (8'hXX) to the signal network.
+vcom -reportprogress 300 -work work /home/dghauri/ClassFiles/482X/CPRE482X/Lab3/Fixed_Point_MAC/staged_mac_template.vhd
+# QuestaSim-64 vcom 2021.2 Compiler 2021.04 Apr 14 2021
+# Start time: 21:16:37 on Nov 17,2021
+# vcom -reportprogress 300 -work work /home/dghauri/ClassFiles/482X/CPRE482X/Lab3/Fixed_Point_MAC/staged_mac_template.vhd 
+# -- Loading package STANDARD
+# -- Loading package TEXTIO
+# -- Loading package std_logic_1164
+# -- Loading package NUMERIC_STD
+# -- Compiling entity staged_mac
+# -- Compiling architecture mixed of staged_mac
+# End time: 21:16:37 on Nov 17,2021, Elapsed time: 0:00:00
+# Errors: 0, Warnings: 0
+quit -sim
+# End time: 21:16:40 on Nov 17,2021, Elapsed time: 0:00:35
+# Errors: 0, Warnings: 2
+do tb_staged_mac.do
+# vsim -voptargs="+acc" work.tb_staged_mac 
+# Start time: 21:16:42 on Nov 17,2021
+# ** Note: (vsim-3813) Design is being optimized due to module recompilation...
+# ** Note: (vopt-143) Recognized 1 FSM in architecture body "staged_mac(mixed)".
+# Loading std.standard
+# Loading std.textio(body)
+# Loading ieee.std_logic_1164(body)
+# Loading ieee.std_logic_textio(body)
+# Loading std.env(body)
+# Loading work.tb_staged_mac(mixed)#1
+# Loading ieee.numeric_std(body)
+# Loading work.staged_mac(mixed)#1
+# Loading work.dffg(mixed)#1
+# ** Warning: (vsim-8683) Uninitialized out port /tb_staged_mac/DUT0/MO_AXIS_TLAST has no driver.
+# This port will contribute value (U) to the signal network.
+# ** Warning: (vsim-8683) Uninitialized out port /tb_staged_mac/DUT0/MO_AXIS_TID(7 downto 0) has no driver.
+# This port will contribute value (8'hXX) to the signal network.
+# ** Note: NOT Here
+#    Time: 20 ns  Iteration: 1  Instance: /tb_staged_mac/DUT0
+run
+run
+vcom -reportprogress 300 -work work /home/dghauri/ClassFiles/482X/CPRE482X/Lab3/Fixed_Point_MAC/staged_mac_template.vhd
+# QuestaSim-64 vcom 2021.2 Compiler 2021.04 Apr 14 2021
+# Start time: 21:18:31 on Nov 17,2021
+# vcom -reportprogress 300 -work work /home/dghauri/ClassFiles/482X/CPRE482X/Lab3/Fixed_Point_MAC/staged_mac_template.vhd 
+# -- Loading package STANDARD
+# -- Loading package TEXTIO
+# -- Loading package std_logic_1164
+# -- Loading package NUMERIC_STD
+# -- Compiling entity staged_mac
+# -- Compiling architecture mixed of staged_mac
+# End time: 21:18:32 on Nov 17,2021, Elapsed time: 0:00:01
+# Errors: 0, Warnings: 0
+quit -sim
+# End time: 21:18:36 on Nov 17,2021, Elapsed time: 0:01:54
+# Errors: 0, Warnings: 2
+do tb_staged_mac.do
+# vsim -voptargs="+acc" work.tb_staged_mac 
+# Start time: 21:18:38 on Nov 17,2021
+# ** Note: (vsim-3813) Design is being optimized due to module recompilation...
+# ** Note: (vopt-143) Recognized 1 FSM in architecture body "staged_mac(mixed)".
+# Loading std.standard
+# Loading std.textio(body)
+# Loading ieee.std_logic_1164(body)
+# Loading ieee.std_logic_textio(body)
+# Loading std.env(body)
+# Loading work.tb_staged_mac(mixed)#1
+# Loading ieee.numeric_std(body)
+# Loading work.staged_mac(mixed)#1
+# Loading work.dffg(mixed)#1
+# ** Warning: (vsim-8683) Uninitialized out port /tb_staged_mac/DUT0/MO_AXIS_TLAST has no driver.
+# This port will contribute value (U) to the signal network.
+# ** Warning: (vsim-8683) Uninitialized out port /tb_staged_mac/DUT0/MO_AXIS_TID(7 downto 0) has no driver.
+# This port will contribute value (8'hXX) to the signal network.
+# ** Note: Here
+#    Time: 20 ns  Iteration: 1  Instance: /tb_staged_mac/DUT0
+# ** Note: NOT Here
+#    Time: 20 ns  Iteration: 1  Instance: /tb_staged_mac/DUT0
+vcom -reportprogress 300 -work work /home/dghauri/ClassFiles/482X/CPRE482X/Lab3/Fixed_Point_MAC/staged_mac_template.vhd
+# QuestaSim-64 vcom 2021.2 Compiler 2021.04 Apr 14 2021
+# Start time: 21:19:36 on Nov 17,2021
+# vcom -reportprogress 300 -work work /home/dghauri/ClassFiles/482X/CPRE482X/Lab3/Fixed_Point_MAC/staged_mac_template.vhd 
+# -- Loading package STANDARD
+# -- Loading package TEXTIO
+# -- Loading package std_logic_1164
+# -- Loading package NUMERIC_STD
+# -- Compiling entity staged_mac
+# -- Compiling architecture mixed of staged_mac
+# End time: 21:19:36 on Nov 17,2021, Elapsed time: 0:00:00
+# Errors: 0, Warnings: 0
+do tb_staged_mac.do
+# End time: 21:19:41 on Nov 17,2021, Elapsed time: 0:01:03
+# Errors: 0, Warnings: 2
+# vsim -voptargs="+acc" work.tb_staged_mac 
+# Start time: 21:19:41 on Nov 17,2021
+# ** Note: (vsim-3813) Design is being optimized due to module recompilation...
+# ** Note: (vopt-143) Recognized 1 FSM in architecture body "staged_mac(mixed)".
+# Loading std.standard
+# Loading std.textio(body)
+# Loading ieee.std_logic_1164(body)
+# Loading ieee.std_logic_textio(body)
+# Loading std.env(body)
+# Loading work.tb_staged_mac(mixed)#1
+# Loading ieee.numeric_std(body)
+# Loading work.staged_mac(mixed)#1
+# Loading work.dffg(mixed)#1
+# ** Warning: (vsim-8683) Uninitialized out port /tb_staged_mac/DUT0/MO_AXIS_TLAST has no driver.
+# This port will contribute value (U) to the signal network.
+# ** Warning: (vsim-8683) Uninitialized out port /tb_staged_mac/DUT0/MO_AXIS_TID(7 downto 0) has no driver.
+# This port will contribute value (8'hXX) to the signal network.
+# ** Note: Here
+#    Time: 20 ns  Iteration: 1  Instance: /tb_staged_mac/DUT0
+# ** Note: NOT Here
+#    Time: 20 ns  Iteration: 1  Instance: /tb_staged_mac/DUT0
