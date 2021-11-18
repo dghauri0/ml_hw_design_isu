@@ -29,7 +29,7 @@ entity dffg is
        i_RST        : in  std_logic;     -- Reset input
        i_WE         : in  std_logic;     -- Write enable input
        i_D          : in  std_logic_vector(C_DATA_WIDTH-1 downto 0);   -- Data value input
-       o_Q          : out	std_logic_vector(C_DATA_WIDTH-1 downto 0);   -- Data value output
+       o_Q          : out	std_logic_vector(C_DATA_WIDTH-1 downto 0));   -- Data value output
 
 end dffg;
 

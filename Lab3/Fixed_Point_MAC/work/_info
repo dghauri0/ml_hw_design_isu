@@ -1,0 +1,151 @@
+m255
+K4
+z2
+!s99 nomlopt
+!s11e vcom 2021.2 2021.04, Apr 14 2021
+13
+!s112 1.1
+!i10d 8192
+!i10e 25
+!i10f 100
+cModel Technology
+Z0 d/home/dghauri/ClassFiles/482X/CPRE482X/Lab3/Fixed_Point_MAC
+T_opt
+!s110 1637203296
+VKNQni0m3d656<1MdHW^zj0
+04 13 5 work tb_staged_mac mixed 1
+=1-00133b5b2bb1-6195bd5f-e82fd-50af
+!s124 OEM100
+o-quiet -auto_acc_if_foreign -work work +acc
+tCvgOpt 0
+n@_opt
+OL;O;2021.2;73
+Edffg
+Z1 w1637200429
+Z2 DPx3 std 6 textio 0 22 zE1`LPoLg^DX3Oz^4Fj1K3
+Z3 DPx4 ieee 14 std_logic_1164 0 22 cVAk:aDinOX8^VGI1ekP<3
+!i122 0
+R0
+Z4 8/home/dghauri/ClassFiles/482X/CPRE482X/Lab3/Fixed_Point_MAC/dffg.vhd
+Z5 F/home/dghauri/ClassFiles/482X/CPRE482X/Lab3/Fixed_Point_MAC/dffg.vhd
+l0
+L23 1
+VK;Uc`m?bl:FWd_oiW<[HG2
+!s100 TTHjEg4lF^dd;zEdU<Rd>0
+Z6 OL;C;2021.2;73
+33
+Z7 !s110 1637203290
+!i10b 1
+Z8 !s108 1637203289.000000
+Z9 !s90 -reportprogress|300|-work|work|/home/dghauri/ClassFiles/482X/CPRE482X/Lab3/Fixed_Point_MAC/dffg.vhd|
+Z10 !s107 /home/dghauri/ClassFiles/482X/CPRE482X/Lab3/Fixed_Point_MAC/dffg.vhd|
+!i113 0
+Z11 o-work work
+Z12 tExplicit 1 NoCoverage 1 CvgOpt 0
+Amixed
+R2
+R3
+DEx4 work 4 dffg 0 22 K;Uc`m?bl:FWd_oiW<[HG2
+!i122 0
+l40
+L36 29
+VeM`<kWcmKlbemmf0_Jmc?1
+!s100 MjFT0eO7HN5XOK?5:0OYI0
+R6
+33
+R7
+!i10b 1
+R8
+R9
+R10
+!i113 0
+R11
+R12
+Estaged_mac
+Z13 w1637202433
+Z14 DPx4 ieee 11 numeric_std 0 22 aU^R8eGcicLcUFIaBQSL>3
+R2
+R3
+!i122 1
+R0
+Z15 8/home/dghauri/ClassFiles/482X/CPRE482X/Lab3/Fixed_Point_MAC/staged_mac_template.vhd
+Z16 F/home/dghauri/ClassFiles/482X/CPRE482X/Lab3/Fixed_Point_MAC/staged_mac_template.vhd
+l0
+Z17 L22 1
+VaMF]PlEB?VWeYiYAIfSYi1
+!s100 lfXdHXHRHZjDLK4geLW>Y2
+R6
+33
+R7
+!i10b 1
+Z18 !s108 1637203290.000000
+Z19 !s90 -reportprogress|300|-work|work|/home/dghauri/ClassFiles/482X/CPRE482X/Lab3/Fixed_Point_MAC/staged_mac_template.vhd|
+Z20 !s107 /home/dghauri/ClassFiles/482X/CPRE482X/Lab3/Fixed_Point_MAC/staged_mac_template.vhd|
+!i113 0
+R11
+R12
+Amixed
+R14
+R2
+R3
+DEx4 work 10 staged_mac 0 22 aMF]PlEB?VWeYiYAIfSYi1
+!i122 1
+l92
+L50 127
+VH8g1SF]0dnBOH@Ai_=2432
+!s100 DGoJOi@e]_`3nfCWzIl=Q2
+R6
+33
+R7
+!i10b 1
+R18
+R19
+R20
+!i113 0
+R11
+R12
+Etb_staged_mac
+Z21 w1637203192
+Z22 DPx3 std 3 env 0 22 d?`1ck@NdeD@H3RZG7FgZ2
+Z23 DPx4 ieee 16 std_logic_textio 0 22 8]8<fKiYoHe;_IDO3kmNH2
+R2
+R3
+!i122 2
+R0
+Z24 8/home/dghauri/ClassFiles/482X/CPRE482X/Lab3/Fixed_Point_MAC/tb_staged_mac.vhd
+Z25 F/home/dghauri/ClassFiles/482X/CPRE482X/Lab3/Fixed_Point_MAC/tb_staged_mac.vhd
+l0
+R17
+VOd1mFI3MEaWc1GJYh3Ti`0
+!s100 ^nX;@^f<@[hAo@=@::PCh3
+R6
+33
+R7
+!i10b 1
+R18
+Z26 !s90 -reportprogress|300|-work|work|/home/dghauri/ClassFiles/482X/CPRE482X/Lab3/Fixed_Point_MAC/tb_staged_mac.vhd|
+Z27 !s107 /home/dghauri/ClassFiles/482X/CPRE482X/Lab3/Fixed_Point_MAC/tb_staged_mac.vhd|
+!i113 0
+R11
+R12
+Amixed
+R22
+R23
+R2
+R3
+DEx4 work 13 tb_staged_mac 0 22 Od1mFI3MEaWc1GJYh3Ti`0
+!i122 2
+l88
+L26 127
+VQPNm>HiP0AZmAW?XOee:L0
+!s100 B3=JOX5UO2eL<Q]J=QQ`72
+R6
+33
+R7
+!i10b 1
+R18
+R26
+R27
+!i113 0
+R11
+R12

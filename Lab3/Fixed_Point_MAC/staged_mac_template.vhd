@@ -24,8 +24,8 @@ entity staged_mac is
       -- Parameters of mac
       C_DATA_WIDTH : integer := 32
     );
-		ARESETN	: in	std_logic;       
-
+  port( ARESETN	        : in	std_logic; --reset    
+        ACLK            : in    std_logic; -- Main CLK
         -- AXIS slave data interface
 		SD_AXIS_TREADY	: out	std_logic; --Send signal to master when slave is ready to receive data
 		SD_AXIS_TDATA	: in	std_logic_vector(C_DATA_WIDTH*2-1 downto 0);  -- Packed data input from master
@@ -42,8 +42,6 @@ entity staged_mac is
 		MO_AXIS_TID     : out   std_logic_vector(7 downto 0) --OPTIONAL
     );
 
-attribute SIGIS : string; 
-attribute SIGIS of ACLK : signal is "Clk"; 
 
 end staged_mac;
 
@@ -73,18 +71,7 @@ architecture mixed of staged_mac is
                i_D          : in    std_logic_vector(C_DATA_WIDTH-1 downto 0);   -- Data value input
                o_Q          : out	std_logic_vector(C_DATA_WIDTH-1 downto 0)    -- Data value output
               ); 
-    end component 
-
-begin
-
-    --Component for register.
-    register_acc: dffg
-        port MAP(i_CLK  => ACLK,
-                 i_RST  => reset_reg,
-                 i_WE   => '1',
-                 i_D    => MULT(C_DATA_WIDTH-1 downto 0) + accumulate,
-                 o_Q    => accumulate
-                );
+    end component; 
 
     -- Interface signals
 
@@ -99,11 +86,23 @@ begin
     --Signal that holds A*B
     signal MULT : std_logic_vector(2*(C_DATA_WIDTH-1) downto 0);
     --Signal to reset register.
-    signal reset_reg : std_logic := 0;
+    signal reset_reg : std_logic := '0';
+    signal mult_add : std_logic_vector((C_DATA_WIDTH-1) downto 0);
+
+begin
+
+    --Component for register.
+    register_acc: dffg
+        port MAP(i_CLK  => ACLK,
+                 i_RST  => reset_reg,
+                 i_WE   => '1',
+                 i_D    => mult_add,
+                 o_Q    => accumulate
+                );
+
 	
 	-- Debug Signals
-    mac_debug <= x"00000000";  -- Double checking sanity
-    
+    mac_debug <= x"00000000";  -- Double checking sanity    
     
    process (ACLK) is
    begin 
@@ -119,7 +118,7 @@ begin
             when WAIT_FOR_VALUES =>
                 -- Wait here until we recieve valid values
                 SD_AXIS_TREADY <= '1';
-                if(SD_AXIS_TREADY && SD_AXIS_TVALID) then
+                if(SD_AXIS_TVALID) then
                     state <= PROCESSING_VALUES;
                 end if;
 
@@ -127,38 +126,40 @@ begin
             when PROCESSING_VALUES =>
                 --MAC here
                 reset_reg <= '0';
-                if(!SD_AXIS_TVALID || !SD_AXIS_TREADY) then
+                if(not SD_AXIS_TVALID) then
                     state <= WAIT_FOR_VALUES;
                 end if;
                 
                 -- Break input into data A and B for MAC
                 A <= SD_AXIS_TDATA(C_DATA_WIDTH-1 downto 0);
                 B <= SD_AXIS_TDATA((C_DATA_WIDTH*2)-1 downto C_DATA_WIDTH);
-                MULT <= A*B;
-                accumulate <= MULT(C_DATA_WIDTH-1 downto 0) + accumulate; --Take first 32 bits of MULT to truncate and prevent overflow
+                MULT <= std_logic_vector(signed(A) * signed(B));
+                mult_add <= std_logic_vector(signed(MULT(C_DATA_WIDTH-1 downto 0)) + signed(accumulate)); --Take first 32 bits of MULT to truncate and prevent overflow
                
                 if(SD_AXIS_TLAST) then
                     state <= SENDING_DATA;
-                elsif (!SD_AXIS_TLAST) then
+                elsif (not SD_AXIS_TLAST) then
                     state <= PROCESSING_VALUES;
                 end if;
 
             when WAITING_TO_SEND_VALUES =>
                 if(MO_AXIS_TREADY) then
                     state <= SENDING_DATA;
+                elsif (not MO_AXIS_TREADY) then
+                    state <= WAITING_TO_SEND_VALUES;
                 end if;
 
             when SENDING_DATA =>
                 SD_AXIS_TREADY <= '0';
                 MO_AXIS_TDATA <= accumulate;
                 MO_AXIS_TVALID <= '1';
-                if(!MO_AXIS_TREADY) then
+                if(not MO_AXIS_TREADY) then
                     state <= WAITING_TO_SEND_VALUES;
                 end if;
                 reset_reg <= '1';
-                if(!SD_AXIS_TREADY || !SD_AXIS_TVALID) then
+                if(not SD_AXIS_TVALID) then
                     state <= WAIT_FOR_VALUES;
-                elsif (SD_AXIS_TREADY && SD_AXIS_TVALID) then
+                elsif (SD_AXIS_TREADY and SD_AXIS_TVALID) then
                     state <= PROCESSING_VALUES;
                 end if;
 

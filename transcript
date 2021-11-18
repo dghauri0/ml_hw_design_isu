@@ -1,0 +1,201 @@
+# //  Questa Sim-64
+# //  Version 2021.2 linux_x86_64 Apr 14 2021
+# //
+# //  Copyright 1991-2021 Mentor Graphics Corporation
+# //  All Rights Reserved.
+# //
+# //  QuestaSim and its associated documentation contain trade
+# //  secrets and commercial or financial information that are the property of
+# //  Mentor Graphics Corporation and are privileged, confidential,
+# //  and exempt from disclosure under the Freedom of Information Act,
+# //  5 U.S.C. Section 552. Furthermore, this information
+# //  is prohibited from disclosure under the Trade Secrets Act,
+# //  18 U.S.C. Section 1905.
+# //
+cd /home/dghauri/ClassFiles/482X/CPRE482X/Lab3/Fixed_Point_MAC
+# reading modelsim.ini
+# Modified modelsim.ini
+vlib work
+vcom -reportprogress 300 -work work /home/dghauri/ClassFiles/482X/CPRE482X/Lab3/Fixed_Point_MAC/dffg.vhd
+# QuestaSim-64 vcom 2021.2 Compiler 2021.04 Apr 14 2021
+# Start time: 20:41:29 on Nov 17,2021
+# vcom -reportprogress 300 -work work /home/dghauri/ClassFiles/482X/CPRE482X/Lab3/Fixed_Point_MAC/dffg.vhd 
+# -- Loading package STANDARD
+# -- Loading package TEXTIO
+# -- Loading package std_logic_1164
+# -- Compiling entity dffg
+# -- Compiling architecture mixed of dffg
+# End time: 20:41:30 on Nov 17,2021, Elapsed time: 0:00:01
+# Errors: 0, Warnings: 0
+vcom -reportprogress 300 -work work /home/dghauri/ClassFiles/482X/CPRE482X/Lab3/Fixed_Point_MAC/staged_mac_template.vhd
+# QuestaSim-64 vcom 2021.2 Compiler 2021.04 Apr 14 2021
+# Start time: 20:41:30 on Nov 17,2021
+# vcom -reportprogress 300 -work work /home/dghauri/ClassFiles/482X/CPRE482X/Lab3/Fixed_Point_MAC/staged_mac_template.vhd 
+# -- Loading package STANDARD
+# -- Loading package TEXTIO
+# -- Loading package std_logic_1164
+# -- Loading package NUMERIC_STD
+# -- Compiling entity staged_mac
+# -- Compiling architecture mixed of staged_mac
+# End time: 20:41:30 on Nov 17,2021, Elapsed time: 0:00:00
+# Errors: 0, Warnings: 0
+vcom -reportprogress 300 -work work /home/dghauri/ClassFiles/482X/CPRE482X/Lab3/Fixed_Point_MAC/tb_staged_mac.vhd
+# QuestaSim-64 vcom 2021.2 Compiler 2021.04 Apr 14 2021
+# Start time: 20:41:30 on Nov 17,2021
+# vcom -reportprogress 300 -work work /home/dghauri/ClassFiles/482X/CPRE482X/Lab3/Fixed_Point_MAC/tb_staged_mac.vhd 
+# -- Loading package STANDARD
+# -- Loading package TEXTIO
+# -- Loading package std_logic_1164
+# -- Loading package std_logic_textio
+# -- Loading package ENV
+# -- Compiling entity tb_staged_mac
+# -- Compiling architecture mixed of tb_staged_mac
+# End time: 20:41:30 on Nov 17,2021, Elapsed time: 0:00:00
+# Errors: 0, Warnings: 0
+do tb_staged_mac.do
+# vsim -voptargs="+acc" work.tb_staged_mac 
+# Start time: 20:41:35 on Nov 17,2021
+# ** Note: (vsim-3812) Design is being optimized...
+# ** Note: (vopt-143) Recognized 1 FSM in architecture body "staged_mac(mixed)".
+# Loading std.standard
+# Loading std.textio(body)
+# Loading ieee.std_logic_1164(body)
+# Loading ieee.std_logic_textio(body)
+# Loading std.env(body)
+# Loading work.tb_staged_mac(mixed)#1
+# Loading ieee.numeric_std(body)
+# Loading work.staged_mac(mixed)#1
+# Loading work.dffg(mixed)#1
+# ** Warning: (vsim-8683) Uninitialized out port /tb_staged_mac/DUT0/MO_AXIS_TLAST has no driver.
+# This port will contribute value (U) to the signal network.
+# ** Warning: (vsim-8683) Uninitialized out port /tb_staged_mac/DUT0/MO_AXIS_TID(7 downto 0) has no driver.
+# This port will contribute value (8'hXX) to the signal network.
+# ** UI-Msg: (vish-4014) No objects found matching '/tb_staged_mac/DUT0/reset'.
+# Error in macro ./tb_staged_mac.do line 10
+# ** UI-Msg: (vish-4014) No objects found matching '/tb_staged_mac/DUT0/reset'.
+#     while executing
+# "add wave -noupdate -divider {Standard Inputs}"
+quit -sim
+# End time: 20:43:39 on Nov 17,2021, Elapsed time: 0:02:04
+# Errors: 0, Warnings: 2
+do tb_staged_mac.do
+# vsim -voptargs="+acc" work.tb_staged_mac 
+# Start time: 20:43:43 on Nov 17,2021
+# ** Note: (vsim-8009) Loading existing optimized design _opt
+# Loading std.standard
+# Loading std.textio(body)
+# Loading ieee.std_logic_1164(body)
+# Loading ieee.std_logic_textio(body)
+# Loading std.env(body)
+# Loading work.tb_staged_mac(mixed)#1
+# Loading ieee.numeric_std(body)
+# Loading work.staged_mac(mixed)#1
+# Loading work.dffg(mixed)#1
+# ** Warning: (vsim-8683) Uninitialized out port /tb_staged_mac/DUT0/MO_AXIS_TLAST has no driver.
+# This port will contribute value (U) to the signal network.
+# ** Warning: (vsim-8683) Uninitialized out port /tb_staged_mac/DUT0/MO_AXIS_TID(7 downto 0) has no driver.
+# This port will contribute value (8'hXX) to the signal network.
+# ** UI-Msg: (vish-4014) No objects found matching '/tb_staged_mac/DUT0/s_ARESETN'.
+# Error in macro ./tb_staged_mac.do line 10
+# ** UI-Msg: (vish-4014) No objects found matching '/tb_staged_mac/DUT0/s_ARESETN'.
+#     while executing
+# "add wave -noupdate -divider {Standard Inputs}"
+add wave -position insertpoint  \
+sim:/tb_staged_mac/s_ARESETN
+quit -sim
+# End time: 20:44:34 on Nov 17,2021, Elapsed time: 0:00:51
+# Errors: 0, Warnings: 2
+do tb_staged_mac.do
+# vsim -voptargs="+acc" work.tb_staged_mac 
+# Start time: 20:44:36 on Nov 17,2021
+# ** Note: (vsim-8009) Loading existing optimized design _opt
+# Loading std.standard
+# Loading std.textio(body)
+# Loading ieee.std_logic_1164(body)
+# Loading ieee.std_logic_textio(body)
+# Loading std.env(body)
+# Loading work.tb_staged_mac(mixed)#1
+# Loading ieee.numeric_std(body)
+# Loading work.staged_mac(mixed)#1
+# Loading work.dffg(mixed)#1
+# ** Warning: (vsim-8683) Uninitialized out port /tb_staged_mac/DUT0/MO_AXIS_TLAST has no driver.
+# This port will contribute value (U) to the signal network.
+# ** Warning: (vsim-8683) Uninitialized out port /tb_staged_mac/DUT0/MO_AXIS_TID(7 downto 0) has no driver.
+# This port will contribute value (8'hXX) to the signal network.
+# ** UI-Msg: (vish-4014) No objects found matching '/tb_staged_mac/DUT0/s_SD_AXIS_TVALID'.
+# Error in macro ./tb_staged_mac.do line 21
+# ** UI-Msg: (vish-4014) No objects found matching '/tb_staged_mac/DUT0/s_SD_AXIS_TVALID'.
+#     while executing
+# "add wave -noupdate -radix unsigned /tb_staged_mac/DUT0/SD_AXIS_TDATA"
+quit -sim
+# End time: 20:45:03 on Nov 17,2021, Elapsed time: 0:00:27
+# Errors: 0, Warnings: 2
+do tb_staged_mac.do
+# vsim -voptargs="+acc" work.tb_staged_mac 
+# Start time: 20:45:04 on Nov 17,2021
+# ** Note: (vsim-8009) Loading existing optimized design _opt
+# Loading std.standard
+# Loading std.textio(body)
+# Loading ieee.std_logic_1164(body)
+# Loading ieee.std_logic_textio(body)
+# Loading std.env(body)
+# Loading work.tb_staged_mac(mixed)#1
+# Loading ieee.numeric_std(body)
+# Loading work.staged_mac(mixed)#1
+# Loading work.dffg(mixed)#1
+# ** Warning: (vsim-8683) Uninitialized out port /tb_staged_mac/DUT0/MO_AXIS_TLAST has no driver.
+# This port will contribute value (U) to the signal network.
+# ** Warning: (vsim-8683) Uninitialized out port /tb_staged_mac/DUT0/MO_AXIS_TID(7 downto 0) has no driver.
+# This port will contribute value (8'hXX) to the signal network.
+# ** UI-Msg: (vish-4014) No objects found matching '/tb_staged_mac/ARESETN'.
+# Error in macro ./tb_staged_mac.do line 36
+# ** UI-Msg: (vish-4014) No objects found matching '/tb_staged_mac/ARESETN'.
+#     while executing
+# "add wave -noupdate -divider {Standard Inputs}"
+run
+run
+quit -sim
+# End time: 20:45:39 on Nov 17,2021, Elapsed time: 0:00:35
+# Errors: 0, Warnings: 2
+do tb_staged_mac.do
+# vsim -voptargs="+acc" work.tb_staged_mac 
+# Start time: 20:45:41 on Nov 17,2021
+# ** Note: (vsim-8009) Loading existing optimized design _opt
+# Loading std.standard
+# Loading std.textio(body)
+# Loading ieee.std_logic_1164(body)
+# Loading ieee.std_logic_textio(body)
+# Loading std.env(body)
+# Loading work.tb_staged_mac(mixed)#1
+# Loading ieee.numeric_std(body)
+# Loading work.staged_mac(mixed)#1
+# Loading work.dffg(mixed)#1
+# ** Warning: (vsim-8683) Uninitialized out port /tb_staged_mac/DUT0/MO_AXIS_TLAST has no driver.
+# This port will contribute value (U) to the signal network.
+# ** Warning: (vsim-8683) Uninitialized out port /tb_staged_mac/DUT0/MO_AXIS_TID(7 downto 0) has no driver.
+# This port will contribute value (8'hXX) to the signal network.
+# ** UI-Msg: (vish-4014) No objects found matching '/tb_staged_mac/ARESETN'.
+# Error in macro ./tb_staged_mac.do line 36
+# ** UI-Msg: (vish-4014) No objects found matching '/tb_staged_mac/ARESETN'.
+#     while executing
+# "add wave -noupdate -divider {Standard Inputs}"
+quit -sim
+# End time: 20:46:12 on Nov 17,2021, Elapsed time: 0:00:31
+# Errors: 0, Warnings: 2
+do tb_staged_mac.do
+# vsim -voptargs="+acc" work.tb_staged_mac 
+# Start time: 20:46:13 on Nov 17,2021
+# ** Note: (vsim-8009) Loading existing optimized design _opt
+# Loading std.standard
+# Loading std.textio(body)
+# Loading ieee.std_logic_1164(body)
+# Loading ieee.std_logic_textio(body)
+# Loading std.env(body)
+# Loading work.tb_staged_mac(mixed)#1
+# Loading ieee.numeric_std(body)
+# Loading work.staged_mac(mixed)#1
+# Loading work.dffg(mixed)#1
+# ** Warning: (vsim-8683) Uninitialized out port /tb_staged_mac/DUT0/MO_AXIS_TLAST has no driver.
+# This port will contribute value (U) to the signal network.
+# ** Warning: (vsim-8683) Uninitialized out port /tb_staged_mac/DUT0/MO_AXIS_TID(7 downto 0) has no driver.
+# This port will contribute value (8'hXX) to the signal network.

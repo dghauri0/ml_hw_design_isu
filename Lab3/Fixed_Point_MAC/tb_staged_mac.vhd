@@ -3,7 +3,7 @@
 -- Department of Electrical and Computer Engineering
 -- Iowa State University
 -------------------------------------------------------------------------
--- tb_TPU_MV_Element.vhd
+-- tb_staged_mac.vhd
 -------------------------------------------------------------------------
 -- DESCRIPTION: This file contains a testbench for the TPU MAC unit.
 --              
@@ -19,11 +19,11 @@ use std.textio.all;             -- For basic I/O
 
 -- Usually name your testbench similar to below for clarity tb_<name>
 -- TODO: change all instances of tb_TPU_MV_Element to reflect the new testbench.
-entity tb_TPU_MV_Element is
-  generic(gCLK_HPER   : time := 10 ns);   -- Generic for half of the clock cycle period
-end tb_TPU_MV_Element;
+entity tb_staged_mac is
+  generic(gCLK_HPER   : time := 10 ns; C_DATA_WIDTH : integer := 32);   -- Generic for half of the clock cycle period
+end tb_staged_mac;
 
-architecture mixed of tb_TPU_MV_Element is
+architecture mixed of tb_staged_mac is
 
 -- Define the total clock period time
 constant cCLK_PER  : time := gCLK_HPER * 2;
@@ -31,52 +31,90 @@ constant cCLK_PER  : time := gCLK_HPER * 2;
 -- We will be instantiating our design under test (DUT), so we need to specify its
 -- component interface.
 -- TODO: change component declaration as needed.
-component TPU_MV_Element is
-  port(iCLK                         : in std_logic;
-       iX 		            : in integer;
-       iW 		            : in integer;
-       iLdW 		            : in integer;
-       iY                           : in integer;
-       oY 		            : out integer;
-       oX 		            : out integer);
+component staged_mac is
+  generic(
+      -- Parameters of mac
+      C_DATA_WIDTH : integer := 32
+    );
+  port( ARESETN	        : in	std_logic;       
+        ACLK            : in  std_logic; -- Main CLK
+        -- AXIS slave data interface
+		    SD_AXIS_TREADY	: out	std_logic; --Send signal to master when slave is ready to receive data
+		    SD_AXIS_TDATA	  : in	std_logic_vector(C_DATA_WIDTH*2-1 downto 0);  -- Packed data input from master
+		    SD_AXIS_TLAST	  : in	std_logic; --Last data frame in valid data that informs slave to complete current operation and prepare for a new data stream
+        SD_AXIS_TUSER   : in  std_logic;  -- Should we treat this first value in the stream as an inital accumulate value? OPTIONAL
+		    SD_AXIS_TVALID	: in	std_logic; --when high SD_AXIS_TDATA is valid 
+        SD_AXIS_TID     : in  std_logic_vector(7 downto 0); --Identifier for sent data OPTIONAL
+
+        -- AXIS master accumulate result out interface
+		    MO_AXIS_TVALID	: out	std_logic; --high when MO_AXIS_DATA is valid
+		    MO_AXIS_TDATA	  : out	std_logic_vector(C_DATA_WIDTH-1 downto 0); --data to send to master
+		    MO_AXIS_TLAST	  : out	std_logic; --Last bit to inform master of next operation
+		    MO_AXIS_TREADY	: in	std_logic; --when high, master is ready to receive data
+		    MO_AXIS_TID     : out std_logic_vector(7 downto 0) --OPTIONAL
+    );
+
+
 end component;
 
 -- Create signals for all of the inputs and outputs of the file that you are testing
 -- := '0' or := (others => '0') just make all the signals start at an initial value of zero
-signal CLK, reset : std_logic := '0';
+signal ACLK, reset : std_logic := '0';
 
 -- TODO: change input and output signals as needed.
-signal s_iX   : integer := 0;
-signal s_iW   : integer := 0;
-signal s_iLdW : integer := 0;
-signal s_iY   : integer := 0;
-signal s_oY   : integer;
-signal s_oX   : integer;
+signal s_ARESETN          : std_logic := '0';
 
-begin
+-- Slave Testbench Signals
+signal s_SD_AXIS_TREADY   : std_logic := '0';
+signal s_SD_AXIS_TDATA    : std_logic_vector(C_DATA_WIDTH*2-1 downto 0) := x"0000000000000000";
+signal s_SD_AXIS_TLAST    : std_logic := '0';
+signal s_SD_AXIS_TUSER    : std_logic := '0';
+signal s_SD_AXIS_TVALID   : std_logic := '0';
+signal s_SD_AXIS_TID      : std_logic_vector(7 downto 0) := x"00";
+
+-- Master Testbench Signals
+signal s_MO_AXIS_TVALID	: std_logic := '0';
+signal s_MO_AXIS_TDATA	:	std_logic_vector(C_DATA_WIDTH-1 downto 0) := x"00000000";
+signal s_MO_AXIS_TLAST	:	std_logic := '0';
+signal s_MO_AXIS_TREADY	:	std_logic := '0';
+signal s_MO_AXIS_TID    : std_logic_vector(7 downto 0);
+
+
 
   -- TODO: Actually instantiate the component to test and wire all signals to the corresponding
   -- input or output. Note that DUT0 is just the name of the instance that can be seen 
   -- during simulation. What follows DUT0 is the entity name that will be used to find
   -- the appropriate library component during simulation loading.
-  DUT0: TPU_MV_Element
+begin
+  
+  DUT0: staged_mac
   port map(
-            iCLK     => CLK,
-            iX       => s_iX,
-            iW       => s_iW,
-            iLdW     => s_iLdW,
-            iY       => s_iY,
-            oY       => s_oY,
-            oX       => s_oX);
+    ACLK    => ACLK,
+		ARESETN	=> reset,
+
+    -- AXIS slave data interface
+		SD_AXIS_TREADY  => s_SD_AXIS_TREADY,	
+		SD_AXIS_TDATA	  => s_SD_AXIS_TDATA,
+		SD_AXIS_TLAST	  => s_SD_AXIS_TLAST,
+    SD_AXIS_TUSER   => s_SD_AXIS_TUSER,
+		SD_AXIS_TVALID	=> s_SD_AXIS_TVALID,
+    SD_AXIS_TID     => s_SD_AXIS_TID,
+
+    -- AXIS master accumulate result out interface
+		MO_AXIS_TVALID	=> s_MO_AXIS_TVALID,
+		MO_AXIS_TDATA	  => s_MO_AXIS_TDATA,
+		MO_AXIS_TLAST	  => s_MO_AXIS_TLAST,
+		MO_AXIS_TREADY  => s_MO_AXIS_TREADY,
+		MO_AXIS_TID     => s_MO_AXIS_TID);     
   --You can also do the above port map in one line using the below format: http://www.ics.uci.edu/~jmoorkan/vhdlref/compinst.html
 
   
   --This first process is to setup the clock for the test bench
   P_CLK: process
   begin
-    CLK <= '1';         -- clock starts at 1
+    ACLK <= '1';         -- clock starts at 1
     wait for gCLK_HPER; -- after half a cycle
-    CLK <= '0';         -- clock becomes a 0 (negative edge)
+    ACLK <= '0';         -- clock becomes a 0 (negative edge)
     wait for gCLK_HPER; -- after half a cycle, process begins evaluation again
   end process;
 
@@ -88,38 +126,27 @@ begin
   begin
   	reset <= '0';   
     wait for gCLK_HPER/2;
-	reset <= '1';
+	  reset <= '1';
     wait for gCLK_HPER*2;
 	reset <= '0';
 	wait;
   end process;  
   
-  -- Assign inputs for each test case.
-  -- TODO: add test cases as needed.
   P_TEST_CASES: process
   begin
     wait for gCLK_HPER/2; -- for waveform clarity, I prefer not to change inputs on clk edges
 
     -- Test case 1:
-    -- Initialize weight value to 10.
-    s_iX   <= 0;  -- Not strictly necessary, but this makes the testcases easier to read
-    s_iW   <= 10;
-    s_iLdW <= 1;
-    s_iY   <= 0;  -- Not strictly necessary, but this makes the testcases easier to read
+    
+
+
     wait for gCLK_HPER*2;
-    -- Expect: s_W internal signal to be 10 after positive edge of clock
 
     -- Test case 2:
-    -- Perform average example of an input activation of 3 and a partial sum of 25. The weight is still 10. 
-    s_iX   <= 3;  
-    s_iW   <= 0;  -- Not strictly necessary, but this makes the testcases easier to read
-    s_iLdW <= 0;  -- Make sure we don't continue to load.
-    s_iY   <= 25; 
-    wait for gCLK_HPER*2;
-    wait for gCLK_HPER*2;
-    -- Expect: o_Y output signal to be 55 = 3*10+25 and o_X output signal to be 3 after two positive edge of clock.
 
-    -- TODO: add test cases as needed (at least 3 more for this lab)
+    wait for gCLK_HPER*2;
+    wait for gCLK_HPER*2;
+
   end process;
 
 end mixed;
