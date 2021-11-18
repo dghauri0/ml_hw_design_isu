@@ -20,7 +20,7 @@
 #include <inttypes.h>
 
 #define MAX_THREAD 2
-#define PROFILING_ITERATIONS 1
+#define PROFILING_ITERATIONS 100
 
 using namespace std;
 
@@ -246,7 +246,7 @@ vector<uint8_t> next_dense_uint8_input(vector<float> &input) {
 int main() {  
 
 	//to sent output to text file uncomment next line
-	freopen("out.txt","w",stdout);
+	//freopen("out.txt","w",stdout);
 
 	float time_sum_total = 0;
 
@@ -1014,7 +1014,10 @@ int main() {
 			else {
 				// The values are different
 				printf("%d, %d, %d\n", i, f, k);
+				printf("Expected (test inputs): %f\n", test12_inputs[i]);
+				printf("Actual: %f\n", dequantized_dense2[i]);
 			}
+
 			if (curr_diff > max_diff) {
 				max_diff = curr_diff;
 			}
@@ -1035,6 +1038,7 @@ int main() {
 		} 
 	}
 
+	layer_count = 0;
 	}
 	float average_time_total = time_sum_total / PROFILING_ITERATIONS;
 	printf("Done - Final. [Average Time: %.3fs]\n", average_time_total);

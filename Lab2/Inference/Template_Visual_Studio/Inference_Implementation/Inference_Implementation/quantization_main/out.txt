@@ -1,0 +1,141 @@
+Layer count is: 0.
+Read images: 12288
+Read weights: 2400
+Read biases: 32
+conv1out (int32): 10830
+conv1out (dequantized): 0.101287
+conv1out (uint8): 19
+Read intermediate images: 115200
+conv1 diff: 0.014975
+conv1time: 0.182 seconds.
+Read weights: 25600
+Read biases: 32
+Conv1 UInt: 19
+conv2out (int32): 0
+conv2out (dequantized): 0.000000
+conv2out (uint8): 0
+Read intermediate images: 100352
+conv2 diff: 0.030180
+conv2time: 1.648 seconds.
+Read intermediate images: 25088
+pooling1out (uint8): 0
+pooling1out (float): 0.000000
+pooling1 diff: 0.026734
+pooling1time: 0.002 seconds.
+Read weights: 18432
+Read biases: 64
+conv3out (int32): 0
+conv3out (dequantized): 0.000000
+conv3out (uint8): 0
+Read intermediate images: 43264
+conv3 diff: 0.040774
+conv3time: 0.266 seconds.
+Read weights: 36864
+Read biases: 64
+conv4out (int32): 40585
+conv4out (dequantized): 1.174870
+conv4out (uint8): 153
+Read intermediate images: 36864
+conv4 diff: 0.041640
+conv4time: 0.459 seconds.
+Read intermediate images: 9216
+pooling1out (uint8): 153
+pooling1out (float): 1.178210
+pooling2 diff: 0.041308
+pooling2time: 0.001 seconds.
+Layer count @ CONV 5 is: 6
+Read weights: 36864
+Read biases: 64
+conv5out (int32): 8191
+conv5out (dequantized): 0.266550
+conv5out (uint8): 30
+Read intermediate images: 6400
+conv5 diff: 0.048289
+conv5time: 0.085 seconds.
+Read weights: 73728
+Read biases: 128
+conv6out (int32): 0
+conv6out (dequantized): 0.000000
+conv6out (uint8): 0
+Read intermediate images: 8192
+conv6 diff: 0.093889
+conv6time: 0.104 seconds.
+Read intermediate images: 2048
+pooling3out (uint8): 0
+pooling3out (float): 0.000000
+pooling3 diff: 0.100592
+pooling3time: 0.000 seconds.
+Read biases: 2048
+flat diff: 0.100592
+flattime: 0.000 seconds.
+Read dense weights: 524288
+Read biases: 256
+scale biases Dense layer: 16772.064453
+scale weights Dense layer: 227.767914
+scale input Dense layer: 73.636642
+Read biases: 256
+16, 4, 128
+176, 4, 128
+dense1 diff: 0.214755
+dense1time: 0.022 seconds.
+Read dense weights: 51200
+Read biases: 200
+Read biases: 200
+1, 4, 128
+39, 4, 128
+44, 4, 128
+67, 4, 128
+68, 4, 128
+71, 4, 128
+83, 4, 128
+96, 4, 128
+111, 4, 128
+115, 4, 128
+128, 4, 128
+135, 4, 128
+138, 4, 128
+145, 4, 128
+163, 4, 128
+182, 4, 128
+194, 4, 128
+dense2 diff: 0.011954
+dense2time: 0.002 seconds.
+[Iteration: 0] [Time: 2.770s] Complete.
+
+Layer 0 scaled_weights: 419.308868.
+Layer 0 scaled_input: 255.000000.
+Layer 0 scaled_biases: 106923.757812.
+Layer 1 scaled_weights: 260.899200.
+Layer 1 scaled_input: 191.723389.
+Layer 1 scaled_biases: 50020.480469.
+Layer 2 scaled_weights: 0.000000.
+Layer 2 scaled_input: 98.811050.
+Layer 2 scaled_biases: 0.000000.
+Layer 3 scaled_weights: 183.425766.
+Layer 3 scaled_input: 98.811050.
+Layer 3 scaled_biases: 18124.492188.
+Layer 4 scaled_weights: 234.513245.
+Layer 4 scaled_input: 147.301941.
+Layer 4 scaled_biases: 34544.257812.
+Layer 5 scaled_weights: 0.000000.
+Layer 5 scaled_input: 129.857971.
+Layer 5 scaled_biases: 0.000000.
+Layer 6 scaled_weights: 236.640457.
+Layer 6 scaled_input: 129.857971.
+Layer 6 scaled_biases: 30729.650391.
+Layer 7 scaled_weights: 248.700119.
+Layer 7 scaled_input: 113.211700.
+Layer 7 scaled_biases: 28155.763672.
+Layer 8 scaled_weights: 0.000000.
+Layer 8 scaled_input: 73.636642.
+Layer 8 scaled_biases: 0.000000.
+Layer 9 scaled_weights: 0.000000.
+Layer 9 scaled_input: 73.636642.
+Layer 9 scaled_biases: 0.000000.
+Layer 10 scaled_weights: 227.767914.
+Layer 10 scaled_input: 73.636642.
+Layer 10 scaled_biases: 16772.064453.
+Layer 11 scaled_weights: 95.912842.
+Layer 11 scaled_input: 38.200039.
+Layer 11 scaled_biases: 0.000000.
+Done - Final. [Average Time: 2.770s]
