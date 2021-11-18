@@ -124,11 +124,11 @@ begin
   -- or asynchronous resets.
   P_RST: process
   begin
-  	reset <= '0';   
+  	reset <= '1';   
     wait for gCLK_HPER/2;
-	  reset <= '1';
+	  reset <= '0';
     wait for gCLK_HPER*2;
-	reset <= '0';
+	reset <= '1';
 	wait;
   end process;  
   

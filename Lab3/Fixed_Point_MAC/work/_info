@@ -13,6 +13,10 @@ R0
 R0
 R0
 R0
+R0
+R0
+R0
+R0
 !s11e vcom 2021.2 2021.04, Apr 14 2021
 13
 !s112 1.1
@@ -22,10 +26,10 @@ R0
 cModel Technology
 Z1 d/home/dghauri/ClassFiles/482X/CPRE482X/Lab3/Fixed_Point_MAC
 T_opt
-!s110 1637205581
-VggTl2M_4K@>niIBeIM54>1
+!s110 1637205959
+VnMGklKQd3m?HlSA_`L8JL0
 04 13 5 work tb_staged_mac mixed 1
-=1-00133b5b2bb1-6195c64d-754f2-67fb
+=1-00133b5b2bb1-6195c7c7-9870-6ccb
 !s124 OEM100
 o-quiet -auto_acc_if_foreign -work work +acc
 tCvgOpt 0
@@ -73,11 +77,11 @@ R12
 R13
 R14
 Estaged_mac
-Z15 w1637205569
+Z15 w1637205934
 Z16 DPx4 ieee 11 numeric_std 0 22 aU^R8eGcicLcUFIaBQSL>3
 R3
 R4
-!i122 21
+!i122 24
 R1
 Z17 8/home/dghauri/ClassFiles/482X/CPRE482X/Lab3/Fixed_Point_MAC/staged_mac_template.vhd
 Z18 F/home/dghauri/ClassFiles/482X/CPRE482X/Lab3/Fixed_Point_MAC/staged_mac_template.vhd
@@ -87,9 +91,9 @@ VOW?L?:W7RcH@i5=O7:o1G2
 !s100 O@_N7;Mi<CJ18W@;_[RSh1
 R8
 33
-Z19 !s110 1637205576
+Z19 !s110 1637205938
 !i10b 1
-Z20 !s108 1637205576.000000
+Z20 !s108 1637205938.000000
 Z21 !s90 -reportprogress|300|-work|work|/home/dghauri/ClassFiles/482X/CPRE482X/Lab3/Fixed_Point_MAC/staged_mac_template.vhd|
 Z22 !s107 /home/dghauri/ClassFiles/482X/CPRE482X/Lab3/Fixed_Point_MAC/staged_mac_template.vhd|
 !i113 0
@@ -100,11 +104,11 @@ R16
 R3
 R4
 DEx4 work 10 staged_mac 0 22 OW?L?:W7RcH@i5=O7:o1G2
-!i122 21
+!i122 24
 l93
-L51 136
-VH1Lmc`3VYj[d^mPTO_Pnl0
-!s100 7?[`HH@_an5_Zn`OcALAO2
+L51 137
+VPeo7WlY]T1YiFO0QlZ`z83
+!s100 E;=<9_2CVYPXO@;aaED5V3
 R8
 33
 R19
@@ -116,12 +120,12 @@ R22
 R13
 R14
 Etb_staged_mac
-Z23 w1637204572
+Z23 w1637205951
 Z24 DPx3 std 3 env 0 22 d?`1ck@NdeD@H3RZG7FgZ2
 Z25 DPx4 ieee 16 std_logic_textio 0 22 8]8<fKiYoHe;_IDO3kmNH2
 R3
 R4
-!i122 9
+!i122 25
 R1
 Z26 8/home/dghauri/ClassFiles/482X/CPRE482X/Lab3/Fixed_Point_MAC/tb_staged_mac.vhd
 Z27 F/home/dghauri/ClassFiles/482X/CPRE482X/Lab3/Fixed_Point_MAC/tb_staged_mac.vhd
@@ -131,9 +135,9 @@ VOd1mFI3MEaWc1GJYh3Ti`0
 !s100 ^nX;@^f<@[hAo@=@::PCh3
 R8
 33
-Z28 !s110 1637204803
+Z28 !s110 1637205954
 !i10b 1
-Z29 !s108 1637204803.000000
+Z29 !s108 1637205954.000000
 Z30 !s90 -reportprogress|300|-work|work|/home/dghauri/ClassFiles/482X/CPRE482X/Lab3/Fixed_Point_MAC/tb_staged_mac.vhd|
 Z31 !s107 /home/dghauri/ClassFiles/482X/CPRE482X/Lab3/Fixed_Point_MAC/tb_staged_mac.vhd|
 !i113 0
@@ -145,11 +149,11 @@ R25
 R3
 R4
 DEx4 work 13 tb_staged_mac 0 22 Od1mFI3MEaWc1GJYh3Ti`0
-!i122 9
+!i122 25
 l88
 L26 136
-VM[J_]kiNKCN_SUPIoaD2O1
-!s100 Kz]M?fO?Kkkann[GeWb<W3
+Vf0W_IO_ZIfX2oJoRbWSkW2
+!s100 <aP`YGlYSzNWd[@lbCg3F3
 R8
 33
 R28
