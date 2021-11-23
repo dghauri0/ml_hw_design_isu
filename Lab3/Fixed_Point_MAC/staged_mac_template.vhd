@@ -80,15 +80,15 @@ architecture mixed of staged_mac is
     -- Internal signals
     
     --accumulate signal from reg
-    signal accumulate : std_logic_vector(C_DATA_WIDTH-1 downto 0);
+    signal accumulate : std_logic_vector(C_DATA_WIDTH-1 downto 0) := x"00000000";
     --inputs A and B will be the inputs to the MAC
 	signal A : std_logic_vector(C_DATA_WIDTH-1 downto 0);
     signal B : std_logic_vector(C_DATA_WIDTH-1 downto 0);
     --Signal that holds A*B
-    signal MULT : std_logic_vector(2*(C_DATA_WIDTH-1) downto 0);
+    signal MULT : std_logic_vector(2*(C_DATA_WIDTH)-1 downto 0);
     --Signal to reset register.
     signal reset_reg : std_logic := '0';
-    signal mult_add : std_logic_vector((C_DATA_WIDTH-1) downto 0);
+    signal mult_add : std_logic_vector((C_DATA_WIDTH-1) downto 0) := x"00000000";
 
 begin
 
@@ -105,7 +105,7 @@ begin
 	-- Debug Signals
     --mac_debug <= x"00000000";  -- Double checking sanity    
     
-   process (ACLK) is
+   process (ACLK, MULT, mult_add, accumulate, A, B, reset_reg) is
    begin 
     if rising_edge(ACLK) then  -- Rising Edge
 
@@ -123,6 +123,9 @@ begin
                 --state <= PROCESSING_VALUES;
                 if(SD_AXIS_TVALID) then
                     report "Here";
+                    -- Break input into data A and B for MAC
+                    A <= SD_AXIS_TDATA(C_DATA_WIDTH-1 downto 0);
+                    B <= SD_AXIS_TDATA((C_DATA_WIDTH*2)-1 downto C_DATA_WIDTH);
                     state <= PROCESSING_VALUES;
                 elsif(not SD_AXIS_TVALID) then
                     report "NOT Here";
@@ -132,17 +135,17 @@ begin
 			-- Other stages go here	
             when PROCESSING_VALUES =>
                 --MAC here
+
+                report "In Processing Values State.";
                 reset_reg <= '0';
                 if(not SD_AXIS_TVALID) then
                     state <= WAIT_FOR_VALUES;
                 end if;
-                
-                -- Break input into data A and B for MAC
-                A <= SD_AXIS_TDATA(C_DATA_WIDTH-1 downto 0);
-                B <= SD_AXIS_TDATA((C_DATA_WIDTH*2)-1 downto C_DATA_WIDTH);
+
+                --Multiply and accumulate 
                 MULT <= std_logic_vector(signed(A) * signed(B));
                 mult_add <= std_logic_vector(signed(MULT(C_DATA_WIDTH-1 downto 0)) + signed(accumulate)); --Take first 32 bits of MULT to truncate and prevent overflow
-               
+                
                 if(SD_AXIS_TLAST and MO_AXIS_TREADY) then
                     SD_AXIS_TREADY <= '0';
                     state <= SENDING_DATA;
@@ -154,6 +157,7 @@ begin
                 end if;
 
             when WAITING_TO_SEND_VALUES =>
+        
                 if(MO_AXIS_TREADY) then
                     state <= SENDING_DATA;
                 elsif (not MO_AXIS_TREADY) then

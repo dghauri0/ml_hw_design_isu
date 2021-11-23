@@ -138,17 +138,19 @@ begin
 
     -- Test case 1:
     
+    s_SD_AXIS_TDATA <= x"0000000800000008";
     wait for gCLK_HPER*2;
-    s_SD_AXIS_TDATA <= x"0000000000000000";
     
+    s_SD_AXIS_TVALID <= '1'; -- Go to Processing Values state.
     wait for gCLK_HPER*2;
-    s_SD_AXIS_TVALID <= '1'; 
 
     wait for gCLK_HPER*2;
-    s_SD_AXIS_TLAST <= '1';
 
+    s_SD_AXIS_TLAST <= '1'; 
     wait for gCLK_HPER*2;
-    s_SD_AXIS_TLAST <= '0';
+
+    --wait for gCLK_HPER*2;
+    --s_SD_AXIS_TLAST <= '0';
 
 
     -- Test case 2:
