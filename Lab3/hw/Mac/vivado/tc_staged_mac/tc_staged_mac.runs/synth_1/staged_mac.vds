@@ -1,0 +1,288 @@
+#-----------------------------------------------------------
+# Vivado v2020.1 (64-bit)
+# SW Build 2902540 on Wed May 27 19:54:35 MDT 2020
+# IP Build 2902112 on Wed May 27 22:43:36 MDT 2020
+# Start of session at: Sat Dec  4 12:11:57 2021
+# Process ID: 19350
+# Current directory: /home/larimore/cpre482x/lab3_pipeline/cpre482x-lab3/hw/Mac/vivado/tc_staged_mac/tc_staged_mac.runs/synth_1
+# Command line: vivado -log staged_mac.vds -product Vivado -mode batch -messageDb vivado.pb -notrace -source staged_mac.tcl
+# Log file: /home/larimore/cpre482x/lab3_pipeline/cpre482x-lab3/hw/Mac/vivado/tc_staged_mac/tc_staged_mac.runs/synth_1/staged_mac.vds
+# Journal file: /home/larimore/cpre482x/lab3_pipeline/cpre482x-lab3/hw/Mac/vivado/tc_staged_mac/tc_staged_mac.runs/synth_1/vivado.jou
+#-----------------------------------------------------------
+source staged_mac.tcl -notrace
+INFO: [IP_Flow 19-234] Refreshing IP repositories
+INFO: [IP_Flow 19-1700] Loaded user IP repository '/home/larimore/cpre482x/lab3_pipeline/cpre482x-lab3/hw/Mac'.
+WARNING: [IP_Flow 19-3656] If you move the project, the path for repository '/home/larimore/cpre482x/lab3_pipeline/cpre482x-lab3/hw/Mac' may become invalid. A better location for the repository would be in a path adjacent to the project. (Current project location is '/home/larimore/cpre482x/lab3_pipeline/cpre482x-lab3/hw/Mac/vivado/tc_staged_mac/tc_staged_mac.runs/synth_1'.)
+INFO: [IP_Flow 19-2313] Loaded Vivado IP repository '/remote/Xilinx/2020.1/Vivado/2020.1/data/ip'.
+Command: synth_design -top staged_mac -part xc7z020clg484-1
+Starting synth_design
+Attempting to get a license for feature 'Synthesis' and/or device 'xc7z020'
+INFO: [Common 17-349] Got license for feature 'Synthesis' and/or device 'xc7z020'
+INFO: [Device 21-403] Loading part xc7z020clg484-1
+INFO: [Synth 8-7079] Multithreading enabled for synth_design using a maximum of 4 processes.
+INFO: [Synth 8-7078] Launching helper process for spawning children vivado processes
+INFO: [Synth 8-7075] Helper process launched with PID 19430
+---------------------------------------------------------------------------------
+Starting RTL Elaboration : Time (s): cpu = 00:00:03 ; elapsed = 00:00:06 . Memory (MB): peak = 2283.270 ; gain = 24.770 ; free physical = 6858 ; free virtual = 19142
+---------------------------------------------------------------------------------
+INFO: [Synth 8-638] synthesizing module 'staged_mac' [/home/larimore/cpre482x/lab3_pipeline/cpre482x-lab3/hw/Mac/hdl/staged_mac_template.vhd:49]
+	Parameter C_DATA_WIDTH bound to: 32 - type: integer 
+	Parameter C_DATA_WIDTH bound to: 32 - type: integer 
+INFO: [Synth 8-637] synthesizing blackbox instance 'register_acc' of component 'dffg' [/home/larimore/cpre482x/lab3_pipeline/cpre482x-lab3/hw/Mac/hdl/staged_mac_template.vhd:95]
+INFO: [Synth 8-256] done synthesizing module 'staged_mac' (1#1) [/home/larimore/cpre482x/lab3_pipeline/cpre482x-lab3/hw/Mac/hdl/staged_mac_template.vhd:49]
+---------------------------------------------------------------------------------
+Finished RTL Elaboration : Time (s): cpu = 00:00:04 ; elapsed = 00:00:08 . Memory (MB): peak = 2323.219 ; gain = 64.719 ; free physical = 6893 ; free virtual = 19179
+---------------------------------------------------------------------------------
+---------------------------------------------------------------------------------
+Start Handling Custom Attributes
+---------------------------------------------------------------------------------
+---------------------------------------------------------------------------------
+Finished Handling Custom Attributes : Time (s): cpu = 00:00:04 ; elapsed = 00:00:09 . Memory (MB): peak = 2341.023 ; gain = 82.523 ; free physical = 6889 ; free virtual = 19174
+---------------------------------------------------------------------------------
+---------------------------------------------------------------------------------
+Finished RTL Optimization Phase 1 : Time (s): cpu = 00:00:04 ; elapsed = 00:00:09 . Memory (MB): peak = 2341.023 ; gain = 82.523 ; free physical = 6889 ; free virtual = 19174
+---------------------------------------------------------------------------------
+Netlist sorting complete. Time (s): cpu = 00:00:00 ; elapsed = 00:00:00.01 . Memory (MB): peak = 2341.023 ; gain = 0.000 ; free physical = 6881 ; free virtual = 19167
+INFO: [Project 1-570] Preparing netlist for logic optimization
+
+Processing XDC Constraints
+Initializing timing engine
+Parsing XDC File [/home/larimore/cpre482x/lab3_pipeline/cpre482x-lab3/hw/Mac/hdl/zedboard.xdc]
+WARNING: [Vivado 12-584] No ports matched '[get_ports -of_objects [get_iobanks 33]]'. [/home/larimore/cpre482x/lab3_pipeline/cpre482x-lab3/hw/Mac/hdl/zedboard.xdc:361]
+WARNING: [Vivado 12-584] No ports matched '[get_ports -of_objects [get_iobanks 34]]'. [/home/larimore/cpre482x/lab3_pipeline/cpre482x-lab3/hw/Mac/hdl/zedboard.xdc:366]
+WARNING: [Vivado 12-584] No ports matched '[get_ports -of_objects [get_iobanks 35]]'. [/home/larimore/cpre482x/lab3_pipeline/cpre482x-lab3/hw/Mac/hdl/zedboard.xdc:371]
+WARNING: [Vivado 12-584] No ports matched '[get_ports -of_objects [get_iobanks 13]]'. [/home/larimore/cpre482x/lab3_pipeline/cpre482x-lab3/hw/Mac/hdl/zedboard.xdc:374]
+Finished Parsing XDC File [/home/larimore/cpre482x/lab3_pipeline/cpre482x-lab3/hw/Mac/hdl/zedboard.xdc]
+INFO: [Project 1-236] Implementation specific constraints were found while reading constraint file [/home/larimore/cpre482x/lab3_pipeline/cpre482x-lab3/hw/Mac/hdl/zedboard.xdc]. These constraints will be ignored for synthesis but will be used in implementation. Impacted constraints are listed in the file [.Xil/staged_mac_propImpl.xdc].
+Resolution: To avoid this warning, move constraints listed in [.Xil/staged_mac_propImpl.xdc] to another XDC file and exclude this new file from synthesis with the used_in_synthesis property (File Properties dialog in GUI) and re-run elaboration/synthesis.
+Completed Processing XDC Constraints
+
+Netlist sorting complete. Time (s): cpu = 00:00:00 ; elapsed = 00:00:00 . Memory (MB): peak = 2504.770 ; gain = 0.000 ; free physical = 6744 ; free virtual = 19041
+INFO: [Project 1-111] Unisim Transformation Summary:
+No Unisim elements were transformed.
+
+Constraint Validation Runtime : Time (s): cpu = 00:00:00 ; elapsed = 00:00:00 . Memory (MB): peak = 2504.770 ; gain = 0.000 ; free physical = 6744 ; free virtual = 19041
+---------------------------------------------------------------------------------
+Finished Constraint Validation : Time (s): cpu = 00:00:09 ; elapsed = 00:00:17 . Memory (MB): peak = 2504.770 ; gain = 246.270 ; free physical = 6850 ; free virtual = 19147
+---------------------------------------------------------------------------------
+---------------------------------------------------------------------------------
+Start Loading Part and Timing Information
+---------------------------------------------------------------------------------
+Loading part: xc7z020clg484-1
+---------------------------------------------------------------------------------
+Finished Loading Part and Timing Information : Time (s): cpu = 00:00:09 ; elapsed = 00:00:17 . Memory (MB): peak = 2504.770 ; gain = 246.270 ; free physical = 6850 ; free virtual = 19147
+---------------------------------------------------------------------------------
+---------------------------------------------------------------------------------
+Start Applying 'set_property' XDC Constraints
+---------------------------------------------------------------------------------
+---------------------------------------------------------------------------------
+Finished applying 'set_property' XDC Constraints : Time (s): cpu = 00:00:09 ; elapsed = 00:00:17 . Memory (MB): peak = 2504.770 ; gain = 246.270 ; free physical = 6850 ; free virtual = 19147
+---------------------------------------------------------------------------------
+INFO: [Synth 8-802] inferred FSM for state register 'state_reg' in module 'staged_mac'
+---------------------------------------------------------------------------------------------------
+                   State |                     New Encoding |                Previous Encoding 
+---------------------------------------------------------------------------------------------------
+         wait_for_values |                            00001 |                              000
+       processing_values |                            00010 |                              001
+         cont_processing |                            00100 |                              100
+  waiting_to_send_values |                            01000 |                              010
+            sending_data |                            10000 |                              011
+---------------------------------------------------------------------------------------------------
+INFO: [Synth 8-3354] encoded FSM with state register 'state_reg' using encoding 'one-hot' in module 'staged_mac'
+---------------------------------------------------------------------------------
+Finished RTL Optimization Phase 2 : Time (s): cpu = 00:00:09 ; elapsed = 00:00:18 . Memory (MB): peak = 2504.770 ; gain = 246.270 ; free physical = 6843 ; free virtual = 19141
+---------------------------------------------------------------------------------
+---------------------------------------------------------------------------------
+Start RTL Component Statistics 
+---------------------------------------------------------------------------------
+Detailed RTL Component Info : 
++---Adders : 
+	   2 Input   32 Bit       Adders := 1     
++---Registers : 
+	               32 Bit    Registers := 5     
+	                1 Bit    Registers := 4     
++---Multipliers : 
+	              32x32  Multipliers := 1     
++---Muxes : 
+	   5 Input   32 Bit        Muxes := 3     
+	   5 Input    5 Bit        Muxes := 1     
+	   2 Input    5 Bit        Muxes := 3     
+	   5 Input    1 Bit        Muxes := 7     
+---------------------------------------------------------------------------------
+Finished RTL Component Statistics 
+---------------------------------------------------------------------------------
+---------------------------------------------------------------------------------
+Start Part Resource Summary
+---------------------------------------------------------------------------------
+Part Resources:
+DSPs: 220 (col length:60)
+BRAMs: 280 (col length: RAMB18 60 RAMB36 30)
+---------------------------------------------------------------------------------
+Finished Part Resource Summary
+---------------------------------------------------------------------------------
+---------------------------------------------------------------------------------
+Start Cross Boundary and Area Optimization
+---------------------------------------------------------------------------------
+DSP Report: Generating DSP MULT0, operation Mode is: A2*B2.
+DSP Report: register A_reg is absorbed into DSP MULT0.
+DSP Report: register MULT0 is absorbed into DSP MULT0.
+DSP Report: operator MULT0 is absorbed into DSP MULT0.
+DSP Report: operator MULT0 is absorbed into DSP MULT0.
+DSP Report: Generating DSP MULT_reg, operation Mode is: (PCIN>>17)+A2*B2.
+DSP Report: register B_reg is absorbed into DSP MULT_reg.
+DSP Report: register A_reg is absorbed into DSP MULT_reg.
+DSP Report: register MULT_reg is absorbed into DSP MULT_reg.
+DSP Report: operator MULT0 is absorbed into DSP MULT_reg.
+DSP Report: operator MULT0 is absorbed into DSP MULT_reg.
+DSP Report: Generating DSP MULT0, operation Mode is: A2*B2.
+DSP Report: register MULT0 is absorbed into DSP MULT0.
+DSP Report: register MULT0 is absorbed into DSP MULT0.
+DSP Report: operator MULT0 is absorbed into DSP MULT0.
+DSP Report: operator MULT0 is absorbed into DSP MULT0.
+DSP Report: Generating DSP MULT_reg, operation Mode is: (PCIN>>17)+A2*B2.
+DSP Report: register B_reg is absorbed into DSP MULT_reg.
+DSP Report: register MULT_reg is absorbed into DSP MULT_reg.
+DSP Report: register MULT_reg is absorbed into DSP MULT_reg.
+DSP Report: operator MULT0 is absorbed into DSP MULT_reg.
+DSP Report: operator MULT0 is absorbed into DSP MULT_reg.
+---------------------------------------------------------------------------------
+Finished Cross Boundary and Area Optimization : Time (s): cpu = 00:00:10 ; elapsed = 00:00:19 . Memory (MB): peak = 2504.770 ; gain = 246.270 ; free physical = 6833 ; free virtual = 19133
+---------------------------------------------------------------------------------
+---------------------------------------------------------------------------------
+Start ROM, RAM, DSP and Shift Register Reporting
+---------------------------------------------------------------------------------
+
+DSP: Preliminary Mapping	Report (see note below)
++------------+------------------+--------+--------+--------+--------+--------+------+------+------+------+-------+------+------+
+|Module Name | DSP Mapping      | A Size | B Size | C Size | D Size | P Size | AREG | BREG | CREG | DREG | ADREG | MREG | PREG | 
++------------+------------------+--------+--------+--------+--------+--------+------+------+------+------+-------+------+------+
+|staged_mac  | A2*B2            | 18     | 16     | -      | -      | 48     | 1    | 1    | -    | -    | -     | 0    | 0    | 
+|staged_mac  | (PCIN>>17)+A2*B2 | 16     | 16     | -      | -      | 48     | 1    | 1    | -    | -    | -     | 0    | 1    | 
+|staged_mac  | A2*B2            | 18     | 18     | -      | -      | 48     | 1    | 1    | -    | -    | -     | 0    | 0    | 
+|staged_mac  | (PCIN>>17)+A2*B2 | 18     | 16     | -      | -      | 48     | 1    | 1    | -    | -    | -     | 0    | 1    | 
++------------+------------------+--------+--------+--------+--------+--------+------+------+------+------+-------+------+------+
+
+Note: The table above is a preliminary report that shows the DSPs inferred at the current stage of the synthesis flow. Some DSP may be reimplemented as non DSP primitives later in the synthesis flow. Multiple instantiated DSPs are reported only once.
+---------------------------------------------------------------------------------
+Finished ROM, RAM, DSP and Shift Register Reporting
+---------------------------------------------------------------------------------
+---------------------------------------------------------------------------------
+Start Applying XDC Timing Constraints
+---------------------------------------------------------------------------------
+---------------------------------------------------------------------------------
+Finished Applying XDC Timing Constraints : Time (s): cpu = 00:00:16 ; elapsed = 00:00:27 . Memory (MB): peak = 2504.770 ; gain = 246.270 ; free physical = 6597 ; free virtual = 18901
+---------------------------------------------------------------------------------
+---------------------------------------------------------------------------------
+Start Timing Optimization
+---------------------------------------------------------------------------------
+---------------------------------------------------------------------------------
+Finished Timing Optimization : Time (s): cpu = 00:00:16 ; elapsed = 00:00:27 . Memory (MB): peak = 2504.770 ; gain = 246.270 ; free physical = 6596 ; free virtual = 18900
+---------------------------------------------------------------------------------
+---------------------------------------------------------------------------------
+Start Technology Mapping
+---------------------------------------------------------------------------------
+---------------------------------------------------------------------------------
+Finished Technology Mapping : Time (s): cpu = 00:00:16 ; elapsed = 00:00:27 . Memory (MB): peak = 2504.770 ; gain = 246.270 ; free physical = 6589 ; free virtual = 18893
+---------------------------------------------------------------------------------
+---------------------------------------------------------------------------------
+Start IO Insertion
+---------------------------------------------------------------------------------
+---------------------------------------------------------------------------------
+Start Flattening Before IO Insertion
+---------------------------------------------------------------------------------
+---------------------------------------------------------------------------------
+Finished Flattening Before IO Insertion
+---------------------------------------------------------------------------------
+---------------------------------------------------------------------------------
+Start Final Netlist Cleanup
+---------------------------------------------------------------------------------
+---------------------------------------------------------------------------------
+Finished Final Netlist Cleanup
+---------------------------------------------------------------------------------
+---------------------------------------------------------------------------------
+Finished IO Insertion : Time (s): cpu = 00:00:18 ; elapsed = 00:00:29 . Memory (MB): peak = 2504.770 ; gain = 246.270 ; free physical = 6643 ; free virtual = 18935
+---------------------------------------------------------------------------------
+---------------------------------------------------------------------------------
+Start Renaming Generated Instances
+---------------------------------------------------------------------------------
+---------------------------------------------------------------------------------
+Finished Renaming Generated Instances : Time (s): cpu = 00:00:18 ; elapsed = 00:00:29 . Memory (MB): peak = 2504.770 ; gain = 246.270 ; free physical = 6643 ; free virtual = 18935
+---------------------------------------------------------------------------------
+---------------------------------------------------------------------------------
+Start Rebuilding User Hierarchy
+---------------------------------------------------------------------------------
+---------------------------------------------------------------------------------
+Finished Rebuilding User Hierarchy : Time (s): cpu = 00:00:18 ; elapsed = 00:00:29 . Memory (MB): peak = 2504.770 ; gain = 246.270 ; free physical = 6643 ; free virtual = 18935
+---------------------------------------------------------------------------------
+---------------------------------------------------------------------------------
+Start Renaming Generated Ports
+---------------------------------------------------------------------------------
+---------------------------------------------------------------------------------
+Finished Renaming Generated Ports : Time (s): cpu = 00:00:18 ; elapsed = 00:00:29 . Memory (MB): peak = 2504.770 ; gain = 246.270 ; free physical = 6643 ; free virtual = 18935
+---------------------------------------------------------------------------------
+---------------------------------------------------------------------------------
+Start Handling Custom Attributes
+---------------------------------------------------------------------------------
+---------------------------------------------------------------------------------
+Finished Handling Custom Attributes : Time (s): cpu = 00:00:18 ; elapsed = 00:00:29 . Memory (MB): peak = 2504.770 ; gain = 246.270 ; free physical = 6643 ; free virtual = 18935
+---------------------------------------------------------------------------------
+---------------------------------------------------------------------------------
+Start Renaming Generated Nets
+---------------------------------------------------------------------------------
+---------------------------------------------------------------------------------
+Finished Renaming Generated Nets : Time (s): cpu = 00:00:18 ; elapsed = 00:00:29 . Memory (MB): peak = 2504.770 ; gain = 246.270 ; free physical = 6643 ; free virtual = 18935
+---------------------------------------------------------------------------------
+---------------------------------------------------------------------------------
+Start Writing Synthesis Report
+---------------------------------------------------------------------------------
+
+Report BlackBoxes: 
++------+--------------+----------+
+|      |BlackBox name |Instances |
++------+--------------+----------+
+|1     |dffg          |         1|
++------+--------------+----------+
+
+Report Cell Usage: 
++------+----------+------+
+|      |Cell      |Count |
++------+----------+------+
+|1     |dffg_bbox |     1|
+|2     |BUFG      |     1|
+|3     |CARRY4    |    12|
+|4     |DSP48E1   |     3|
+|6     |LUT1      |     1|
+|7     |LUT2      |    51|
+|8     |LUT3      |    69|
+|9     |LUT4      |     4|
+|10    |LUT5      |     1|
+|11    |LUT6      |     1|
+|12    |FDRE      |    89|
+|13    |FDSE      |     1|
+|14    |IBUF      |    69|
+|15    |OBUF      |    35|
+|16    |OBUFT     |     8|
++------+----------+------+
+---------------------------------------------------------------------------------
+Finished Writing Synthesis Report : Time (s): cpu = 00:00:18 ; elapsed = 00:00:29 . Memory (MB): peak = 2504.770 ; gain = 246.270 ; free physical = 6643 ; free virtual = 18935
+---------------------------------------------------------------------------------
+Synthesis finished with 0 errors, 0 critical warnings and 0 warnings.
+Synthesis Optimization Runtime : Time (s): cpu = 00:00:17 ; elapsed = 00:00:26 . Memory (MB): peak = 2504.770 ; gain = 82.523 ; free physical = 6709 ; free virtual = 19001
+Synthesis Optimization Complete : Time (s): cpu = 00:00:18 ; elapsed = 00:00:30 . Memory (MB): peak = 2504.770 ; gain = 246.270 ; free physical = 6710 ; free virtual = 19002
+INFO: [Project 1-571] Translating synthesized netlist
+Netlist sorting complete. Time (s): cpu = 00:00:00 ; elapsed = 00:00:00 . Memory (MB): peak = 2504.770 ; gain = 0.000 ; free physical = 6783 ; free virtual = 19075
+INFO: [Netlist 29-17] Analyzing 15 Unisim elements for replacement
+INFO: [Netlist 29-28] Unisim Transformation completed in 0 CPU seconds
+INFO: [Project 1-570] Preparing netlist for logic optimization
+INFO: [Opt 31-138] Pushed 0 inverter(s) to 0 load pin(s).
+Netlist sorting complete. Time (s): cpu = 00:00:00 ; elapsed = 00:00:00 . Memory (MB): peak = 2524.762 ; gain = 0.000 ; free physical = 6748 ; free virtual = 19040
+INFO: [Project 1-111] Unisim Transformation Summary:
+No Unisim elements were transformed.
+
+INFO: [Common 17-83] Releasing license: Synthesis
+23 Infos, 5 Warnings, 0 Critical Warnings and 0 Errors encountered.
+synth_design completed successfully
+synth_design: Time (s): cpu = 00:00:26 ; elapsed = 00:00:43 . Memory (MB): peak = 2524.762 ; gain = 266.395 ; free physical = 6894 ; free virtual = 19186
+INFO: [Common 17-1381] The checkpoint '/home/larimore/cpre482x/lab3_pipeline/cpre482x-lab3/hw/Mac/vivado/tc_staged_mac/tc_staged_mac.runs/synth_1/staged_mac.dcp' has been generated.
+INFO: [runtcl-4] Executing : report_utilization -file staged_mac_utilization_synth.rpt -pb staged_mac_utilization_synth.pb
+INFO: [Common 17-206] Exiting Vivado at Sat Dec  4 12:12:55 2021...

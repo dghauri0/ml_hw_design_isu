@@ -1,0 +1,12 @@
+#-----------------------------------------------------------
+# Vivado v2020.1 (64-bit)
+# SW Build 2902540 on Wed May 27 19:54:35 MDT 2020
+# IP Build 2902112 on Wed May 27 22:43:36 MDT 2020
+# Start of session at: Sat Dec  4 12:11:57 2021
+# Process ID: 19350
+# Current directory: /home/larimore/cpre482x/lab3_pipeline/cpre482x-lab3/hw/Mac/vivado/tc_staged_mac/tc_staged_mac.runs/synth_1
+# Command line: vivado -log staged_mac.vds -product Vivado -mode batch -messageDb vivado.pb -notrace -source staged_mac.tcl
+# Log file: /home/larimore/cpre482x/lab3_pipeline/cpre482x-lab3/hw/Mac/vivado/tc_staged_mac/tc_staged_mac.runs/synth_1/staged_mac.vds
+# Journal file: /home/larimore/cpre482x/lab3_pipeline/cpre482x-lab3/hw/Mac/vivado/tc_staged_mac/tc_staged_mac.runs/synth_1/vivado.jou
+#-----------------------------------------------------------
+source staged_mac.tcl -notrace
