@@ -65,7 +65,7 @@ architecture behavioral of piped_mac is
 
 	
 	-- Debug signals, make sure we aren't going crazy
-    signal mac_debug : std_logic_vector(31 downto 0);
+    signal mac_debug : std_logic_vector(31 downto 0) := x"00000000"; 
 
 begin
 
@@ -75,8 +75,7 @@ begin
     -- Internal signals
 	
 	
-	-- Debug Signals
-    mac_debug <= x"00000000";  -- Double checking sanity
+
    
    process (ACLK) is
    begin 
@@ -111,6 +110,7 @@ begin
                     if ((sd_axis_tvalid_s2 = '1') and not (sd_axis_tlast_s2 = '1')) then
                         MO_AXIS_TLAST  <= '0';
                         MO_AXIS_TVALID <= '0';
+			            mac_debug <= MULT(C_DATA_WIDTH-1 downto 0);
                         accumulate     <= std_logic_vector(unsigned(MULT(C_DATA_WIDTH-1 downto 0)) + unsigned(accumulate));
                     elsif ((sd_axis_tlast_s2 = '1') and (sd_axis_tvalid_s2 = '1')) then
                         MO_AXIS_TLAST  <= '1';

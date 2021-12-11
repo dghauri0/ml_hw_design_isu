@@ -162,15 +162,14 @@ begin
     wait for gCLK_HPER*2;
 
     --test case 2
-    --Expect: 3599859712
     --stall for 1 cycles since incoming data isn't valid
     s_SD_AXIS_TVALID <= '0';
     s_SD_AXIS_TDATA  <= x"FFFFFFFFFFFFFFFF";
     s_MO_AXIS_TREADY <= '1';
-    wait for gCLK_HPER*2;
-
-    --we should now be receiving data set in last cycle since it hasn't changed. This data will cause overflow and be conactenated.
+    wait for gCLK_HPER;
     s_SD_AXIS_TVALID <= '1';
+    wait for gCLK_HPER;
+    --we should now be receiving data set in last cycle since it hasn't changed. This data will cause overflow and be conactenated.
     wait for gCLK_HPER*2;
     
     s_SD_AXIS_TDATA <= x"0000000400000004";
@@ -179,7 +178,6 @@ begin
     s_SD_AXIS_TDATA <= x"0000000200000002";
     s_SD_AXIS_TLAST <= '1';
     wait for gCLK_HPER*2;
-    
 
     
   end process;
